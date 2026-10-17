@@ -1,7 +1,31 @@
 import './App.css'
+import { useEffect, useState } from 'react';
 
 function App() {
-  return (
+  
+    const [transactions, setTransactions] = useState([]);
+
+    const sortedTransactions = [...transactions].sort((a, b) => {
+      return new Date(b.date) - new Date(a.date);
+    });
+    useEffect(() => {
+      fetch('http://localhost:8080/api/transactions')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch transactions');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setTransactions(data);
+          console.log('Transactions loaded:', data);
+        })
+        .catch((error) => {
+          console.error('Error fetching transactions:', error);
+        });
+    }, []);
+
+    return (
     <div className="app">
       <header>
         <h1>Personal Finance Tracker</h1>
@@ -28,7 +52,27 @@ function App() {
 
         <section className="transactions">
           <h2>Recent Transactions</h2>
-          <p>No transactions yet. Your transactions will appear here.</p>
+          {
+            sortedTransactions.map((transaction) => (
+            <div key={transaction.id} className="transaction-item">
+              <div className="transaction-info">
+                <h3>{transaction.description}</h3>
+                <p>{transaction.category} · {transaction.date}</p>
+              </div>
+
+              <p className={
+                transaction.type === 'INCOME'
+                  ? 'transaction-income'
+                  : 'transaction-expense'
+              }>
+                {transaction.type === 'INCOME' ? '+' : '−'}
+                ${Number(transaction.amount).toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </p>
+            </div>
+          ))}
         </section>
       </main>
     </div>

@@ -2,15 +2,24 @@
   box-sizing: border-box;
 }
 
+:root {
+  --page-bg: #101827;
+  --card-bg: #1B263B;
+  --income-color: #38BDF8;
+  --expense-color: #FB923C;
+  --main-txt: #F1F5F9;
+  --secondary-txt: #94A3B8;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f4f7fb;
-  color: #1f2937;
+  background-color: var(--page-bg);
+  color: var(--main-txt);
 }
 
 .app {
-  max-width: 1100px;
+  
   margin: 0 auto;
   padding: 40px 24px;
 }
@@ -20,12 +29,14 @@ header {
 }
 
 header h1 {
-  margin-bottom: 8px;
-  color: #172554;
+  color: var(--main-txt);
+  margin: 0 0 8px;
+  font-size: 32px;
 }
 
 header p {
-  color: #64748b;
+  color: var(--secondary-txt);
+  margin-top: 0;
 }
 
 .summary {
@@ -34,33 +45,114 @@ header p {
   gap: 20px;
 }
 
-.card,
-.transactions {
-  background: white;
+.card {
+  background: var(--card-bg);
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .card h3 {
   margin-top: 0;
-  color: #64748b;
+  color: var(--secondary-txt);
   font-size: 16px;
+  font-weight: normal;
 }
 
 .card p {
   margin-bottom: 0;
   font-size: 28px;
   font-weight: bold;
-  color: #15803d;
+  color: var(--income-color);
 }
 
 .transactions {
   margin-top: 24px;
+  padding: 24px 0;
+}
+
+.transactions h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: var(--main-txt);
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background-color: var(--card-bg);
+  border: 1px solid #273449;
+  border-radius: 8px;
+}
+
+.transaction-item:last-child {
+  margin-bottom: 0;
+}
+
+.transaction-item > p {
+  margin: 0;
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  
+}
+
+.transaction-info h3 {
+  margin: 0;
+  color: var(--main-txt);
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.transaction-info p {
+  margin: 0;
+  color: var(--secondary-txt);
+  font-size: 12px;
+}
+
+.transaction-income,
+.transaction-expense {
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.transaction-income {
+  color: var(--income-color);
+}
+
+.transaction-expense {
+  color: var(--expense-color);
 }
 
 @media (max-width: 700px) {
+  .app {
+    padding: 28px 16px;
+  }
+
   .summary {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .card,
+  .transactions {
+    padding: 18px;
+  }
+
+  .transaction-item {
+    padding: 12px;
+    gap: 10px;
   }
 }
