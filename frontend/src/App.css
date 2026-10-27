@@ -233,10 +233,249 @@ header p {
   min-width: 160px;
 }
 
-/* Tablet and mobile layout */
+/* Sidebar and main layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  min-height: 100vh;
+  padding: 28px 18px;
+  background: #151f31;
+  border-right: 1px solid #273449;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--main-txt);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-button {
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--secondary-txt);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav-button:hover,
+.nav-button.active {
+  background: var(--card-bg);
+  color: var(--main-txt);
+}
+
+.add-transaction-button {
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--income-color);
+  color: var(--page-bg);
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-transaction-button:hover {
+  opacity: 0.85;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 32px;
+}
+
+.main-content header {
+  margin-bottom: 32px;
+}
+
+.main-content .app {
+  margin: 0;
+  padding: 0;
+}
+
+/* Add Transaction modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.add-transaction.modal-content {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 0;
+  border: 1px solid #37445a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-close {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.add-transaction .modal-header .modal-close {
+  color: #ffffff;
+  background: transparent;
+  padding: 0 8px;
+}
+
+.add-transaction .modal-actions {
+  display: flex;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.add-transaction .modal-actions button {
+  width: 100%;
+  padding: 14px 16px;
+}
+
+.success-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--card-bg);
+  border: 1px solid #37445a;
+  border-radius: 10px;
+  color: var(--main-txt);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: toast-enter 0.25s ease-out;
+}
+
+.success-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--page-bg);
+}
+
+.toast-income {
+  border-color: var(--income-color);
+}
+
+.toast-expense {
+  border-color: var(--expense-color);
+}
+
+.toast-income .success-toast-icon {
+  background: var(--income-color);
+}
+
+.toast-expense .success-toast-icon {
+  background: var(--expense-color);
+}
+
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.transaction-list {
+  max-height: 550px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.transaction-list .transaction-item {
+  margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  .success-toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    justify-content: center;
+  }
+}
+
+/* Responsive layout */
 @media (max-width: 700px) {
-  .app {
-    padding: 28px 16px;
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    min-height: auto;
+    padding: 18px 16px;
+    gap: 16px;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .nav-button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .add-transaction-button {
+    width: 100%;
+  }
+
+  .main-content {
+    padding: 24px 16px;
   }
 
   .summary {
@@ -247,11 +486,6 @@ header p {
   .card,
   .transactions {
     padding: 18px;
-  }
-
-  .transaction-item {
-    padding: 12px;
-    gap: 10px;
   }
 }
 
@@ -273,5 +507,9 @@ header p {
   .transaction-filter select {
     flex: 1;
     min-width: 0;
+  }
+
+  .add-transaction.modal-content {
+    padding: 18px;
   }
 }
