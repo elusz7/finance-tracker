@@ -11,6 +11,14 @@ function App() {
   // State to manage the visibility of the add transaction modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // state for transaction filtering
+  const [filterType, setFilterType] = useState("ALL");
+  const [filterCategory, setFilterCategory] = useState("ALL");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+
   // new transaction form state
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -130,6 +138,38 @@ function App() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 7);
 
+  // Filter transactions based on the selected filters
+  const allFilteredTransactions = transactions
+    .filter((transaction) => {
+      if (filterType !== "ALL" && transaction.type !== filterType) {
+        return false;
+      }
+
+      if (filterCategory !== "ALL" && transaction.category !== filterCategory) {
+        return false;
+      }
+
+      if (startDate && transaction.date < startDate) {
+        return false;
+      }
+
+      if (endDate && transaction.date > endDate) {
+        return false;
+      }
+
+      if (minAmount !== "" && Number(transaction.amount) < Number(minAmount)) {
+        return false;
+      }
+
+      if (maxAmount !== "" && Number(transaction.amount) > Number(maxAmount)) {
+        return false;
+      }
+
+      return true;
+    })
+    .slice()
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
   useEffect(() => {
     fetch("http://localhost:8080/api/transactions")
       .then((response) => {
@@ -184,123 +224,117 @@ function App() {
 
       <main className="main-content">
         {activePage === "DASHBOARD" && (
-          <>
-            {
-              <div className="app">
-                <header>
-                  <h1>Personal Finance Tracker</h1>
-                  <p>Welcome back! Here's your financial overview.</p>
-                </header>
+          <div className="app">
+            <header>
+              <h1>Personal Finance Tracker</h1>
+              <p>Welcome back! Here's your financial overview.</p>
+            </header>
 
-                <div>
-                  <section className="summary">
-                    <div className="card">
-                      <h3>Current Balance</h3>
-                      <p
-                        className={
-                          balance >= 0
-                            ? "transaction-income"
-                            : "transaction-expense"
-                        }
-                      >
-                        {balance >= 0 ? "+" : "−"}$
-                        {Math.abs(balance).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="card">
-                      <h3>Income</h3>
-                      <p className="transaction-income">
-                        +$
-                        {totalIncome.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="card">
-                      <h3>Expenses</h3>
-                      <p className="transaction-expense">
-                        −$
-                        {totalExpenses.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </p>
-                    </div>
-                  </section>
-
-                  <section className="transactions">
-                    <div className="transactions-header">
-                      <h2>Recent Transactions</h2>
-
-                      <div className="transaction-filter">
-                        <label htmlFor="category-filter">
-                          Filter by category:
-                        </label>
-
-                        <select
-                          id="category-filter"
-                          value={selectedCategory}
-                          onChange={(event) =>
-                            setSelectedCategory(event.target.value)
-                          }
-                        >
-                          <option value="ALL">All Categories</option>
-                          <option value="HOUSING">Housing</option>
-                          <option value="UTILITIES">Utilities</option>
-                          <option value="SUBSCRIPTION">Subscriptions</option>
-                          <option value="GROCERY">Groceries</option>
-                          <option value="DINING">Dining</option>
-                          <option value="ENTERTAINMENT">Entertainment</option>
-                          <option value="TRANSPORTATION">Transportation</option>
-                          <option value="HEALTHCARE">Healthcare</option>
-                          <option value="TRAVEL">Travel</option>
-                          <option value="SHOPPING">Shopping</option>
-                          <option value="PERSONAL_CARE">Personal Care</option>
-                          <option value="EDUCATION">Education</option>
-                          <option value="OTHER">Other</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {filteredTransactions.map((transaction) => (
-                      <div key={transaction.id} className="transaction-item">
-                        <div className="transaction-info">
-                          <h3>{transaction.description}</h3>
-                          <p>
-                            {transaction.category} · {transaction.date}
-                          </p>
-                        </div>
-
-                        <p
-                          className={
-                            transaction.type === "INCOME"
-                              ? "transaction-income"
-                              : "transaction-expense"
-                          }
-                        >
-                          {transaction.type === "INCOME" ? "+" : "−"}$
-                          {Number(transaction.amount).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                      </div>
-                    ))}
-
-                    {filteredTransactions.length === 0 && (
-                      <p>No transactions found for this category.</p>
-                    )}
-                  </section>
+            <div>
+              <section className="summary">
+                <div className="card">
+                  <h3>Current Balance</h3>
+                  <p
+                    className={
+                      balance >= 0
+                        ? "transaction-income"
+                        : "transaction-expense"
+                    }
+                  >
+                    {balance >= 0 ? "+" : "−"}$
+                    {Math.abs(balance).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
                 </div>
-              </div>
-            }
-          </>
+
+                <div className="card">
+                  <h3>Income</h3>
+                  <p className="transaction-income">
+                    +$
+                    {totalIncome.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+
+                <div className="card">
+                  <h3>Expenses</h3>
+                  <p className="transaction-expense">
+                    −$
+                    {totalExpenses.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              </section>
+
+              <section className="transactions">
+                <div className="transactions-header">
+                  <h2>Recent Transactions</h2>
+
+                  <div className="transaction-filter">
+                    <label htmlFor="category-filter">Filter by category:</label>
+
+                    <select
+                      id="category-filter"
+                      value={selectedCategory}
+                      onChange={(event) =>
+                        setSelectedCategory(event.target.value)
+                      }
+                    >
+                      <option value="ALL">All Categories</option>
+                      <option value="HOUSING">Housing</option>
+                      <option value="UTILITIES">Utilities</option>
+                      <option value="SUBSCRIPTION">Subscriptions</option>
+                      <option value="GROCERY">Groceries</option>
+                      <option value="DINING">Dining</option>
+                      <option value="ENTERTAINMENT">Entertainment</option>
+                      <option value="TRANSPORTATION">Transportation</option>
+                      <option value="HEALTHCARE">Healthcare</option>
+                      <option value="TRAVEL">Travel</option>
+                      <option value="SHOPPING">Shopping</option>
+                      <option value="PERSONAL_CARE">Personal Care</option>
+                      <option value="EDUCATION">Education</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="transaction-item">
+                    <div className="transaction-info">
+                      <h3>{transaction.description}</h3>
+                      <p>
+                        {transaction.category} · {transaction.date}
+                      </p>
+                    </div>
+
+                    <p
+                      className={
+                        transaction.type === "INCOME"
+                          ? "transaction-income"
+                          : "transaction-expense"
+                      }
+                    >
+                      {transaction.type === "INCOME" ? "+" : "−"}$
+                      {Number(transaction.amount).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+                ))}
+
+                {filteredTransactions.length === 0 && (
+                  <p>No transactions found for this category.</p>
+                )}
+              </section>
+            </div>
+          </div>
         )}
 
         {activePage === "TRANSACTIONS" && (
@@ -310,42 +344,140 @@ function App() {
               <p>View and manage all your income and expenses.</p>
             </header>
 
-            <section className="transactions">
-              <h2>All Transactions</h2>
-              <div className="transaction-list">
-                {transactions
-                  .slice()
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
-                  .map((transaction) => (
-                    <div key={transaction.id} className="transaction-item">
-                      <div className="transaction-info">
-                        <h3>
-                          {transaction.description || "Untitled transaction"}
-                        </h3>
-                        <p>
-                          {transaction.category} · {transaction.date}
-                        </p>
-                      </div>
+            <div className="transaction-filters">
+              <div className="filter-row">
+                <label>
+                  Type
+                  <select
+                    value={filterType}
+                    onChange={(event) => setFilterType(event.target.value)}
+                  >
+                    <option value="ALL">All Types</option>
+                    <option value="INCOME">Income</option>
+                    <option value="EXPENSE">Expense</option>
+                  </select>
+                </label>
 
-                      <p
-                        className={
-                          transaction.type === "INCOME"
-                            ? "transaction-income"
-                            : "transaction-expense"
-                        }
-                      >
-                        {transaction.type === "INCOME" ? "+" : "−"}$
-                        {Number(transaction.amount).toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                <label>
+                  Category
+                  <select
+                    value={filterCategory}
+                    onChange={(event) => setFilterCategory(event.target.value)}
+                  >
+                    <option value="ALL">All Categories</option>
+                    <option value="HOUSING">Housing</option>
+                    <option value="UTILITIES">Utilities</option>
+                    <option value="SUBSCRIPTION">Subscription</option>
+                    <option value="GROCERY">Grocery</option>
+                    <option value="DINING">Dining</option>
+                    <option value="ENTERTAINMENT">Entertainment</option>
+                    <option value="TRANSPORTATION">Transportation</option>
+                    <option value="HEALTHCARE">Healthcare</option>
+                    <option value="TRAVEL">Travel</option>
+                    <option value="SHOPPING">Shopping</option>
+                    <option value="PERSONAL_CARE">Personal Care</option>
+                    <option value="EDUCATION">Education</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="filter-row">
+                <label>
+                  Start Date
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(event) => setStartDate(event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  End Date
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(event) => setEndDate(event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  Min Amount ($)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={minAmount}
+                    onChange={(event) => setMinAmount(event.target.value)}
+                    placeholder="No minimum"
+                  />
+                </label>
+
+                <label>
+                  Max Amount ($)
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={maxAmount}
+                    onChange={(event) => setMaxAmount(event.target.value)}
+                    placeholder="No maximum"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  className="button-cancel"
+                  onClick={() => {
+                    setFilterType("ALL");
+                    setFilterCategory("ALL");
+                    setStartDate("");
+                    setEndDate("");
+                    setMinAmount("");
+                    setMaxAmount("");
+                  }}
+                >
+                  Reset Filters
+                </button>
+              </div>
+            </div>
+
+            <section className="transactions">
+              <h2>All Transactions ({allFilteredTransactions.length})</h2>
+              <div className="transaction-list">
+                {allFilteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="transaction-item">
+                    <div className="transaction-info">
+                      <h3>
+                        {transaction.description || "Untitled transaction"}
+                      </h3>
+                      <p>
+                        {transaction.category} · {transaction.date}
                       </p>
                     </div>
-                  ))}
 
-                {transactions.length === 0 && (
-                  <p>
-                    No transactions yet. Click + Add Transaction to get started.
+                    <p
+                      className={
+                        transaction.type === "INCOME"
+                          ? "transaction-income"
+                          : "transaction-expense"
+                      }
+                    >
+                      {transaction.type === "INCOME" ? "+" : "−"}$
+                      {Number(transaction.amount).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+                ))}
+
+                {allFilteredTransactions.length === 0 && (
+                  <p className="empty-transactions">
+                    {transactions.length === 0
+                      ? "No transactions yet. Click + Add Transaction to get started."
+                      : "No transactions match your filters."}
                   </p>
                 )}
               </div>
