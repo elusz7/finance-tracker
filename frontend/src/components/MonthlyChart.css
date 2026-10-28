@@ -1,0 +1,38 @@
+.monthly-chart {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  min-width: 0;
+}
+
+.monthly-chart-header {
+  margin-bottom: 20px;
+}
+
+.monthly-chart-header h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.monthly-chart-header p {
+  margin: 0;
+  color: var(--secondary-txt);
+  font-size: 14px;
+}
+
+.monthly-chart-content {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .monthly-chart {
+    padding: 16px;
+  }
+
+  .monthly-chart-header h2 {
+    font-size: 18px;
+  }
+}

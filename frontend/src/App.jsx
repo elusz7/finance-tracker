@@ -4,8 +4,8 @@ import SummaryCards from "./components/SummaryCards";
 import TransactionList from "./components/TransactionList";
 import TransactionModal from "./components/TransactionModal";
 import TransactionFilters from "./components/TransactionFilters";
-import RecentTransactions from "./components/RecentTransactions";
 import SuccessToast from "./components/SuccessToast";
+import MonthlyChart from "./components/MonthlyChart";
 
 import { useEffect, useState } from "react";
 
@@ -52,18 +52,33 @@ function App() {
   const [successMessage, setSuccessMessage] = useState("");
   const [successType, setSuccessType] = useState("EXPENSE");
 
-  // Calculate total income
-  const totalIncome = transactions
+  //YTD calculations
+
+  const now = new Date();
+
+  const currentYear = now.getFullYear();
+
+  const today = [
+    currentYear,
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const yearStart = `${currentYear}-01-01`;
+
+  const ytdTransactions = transactions.filter((transaction) => {
+    return transaction.date >= yearStart && transaction.date <= today;
+  });
+
+  const ytdIncome = ytdTransactions
     .filter((transaction) => transaction.type === "INCOME")
-    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  // Calculate total expenses
-  const totalExpenses = transactions
+  const ytdExpenses = ytdTransactions
     .filter((transaction) => transaction.type === "EXPENSE")
-    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  // Calculate balance
-  const balance = totalIncome - totalExpenses;
+  const ytdBalance = ytdIncome - ytdExpenses;
 
   // Handle deleting a transaction
   const handleDelete = async (transaction) => {
@@ -179,7 +194,7 @@ function App() {
       date,
     };
 
-    // Validate the new transaction
+    // // Submit the new transaction
     try {
       const response = await fetch("http://localhost:8080/api/transactions", {
         method: "POST",
@@ -239,17 +254,6 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [successMessage]);
-
-  //view transactions by category (select most recent 7 transactions)
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
-
-  const filteredTransactions = transactions
-    .filter(
-      (transaction) =>
-        selectedCategory === "ALL" || transaction.category === selectedCategory,
-    )
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 7);
 
   // Filter transactions based on the selected filters
   const allFilteredTransactions = transactions
@@ -312,21 +316,16 @@ function App() {
           <div className="app">
             <header>
               <h1>Personal Finance Tracker</h1>
-              <p>Welcome back! Here's your financial overview.</p>
             </header>
 
             <div>
               <SummaryCards
-                balance={balance}
-                totalIncome={totalIncome}
-                totalExpenses={totalExpenses}
+                ytdBalance={ytdBalance}
+                ytdIncome={ytdIncome}
+                ytdExpenses={ytdExpenses}
               />
 
-              <RecentTransactions
-                transactions={filteredTransactions}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-              />
+              <MonthlyChart transactions={transactions} />
             </div>
           </div>
         )}

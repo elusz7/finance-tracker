@@ -8,6 +8,14 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.sidebar-compact-title,
+.nav-initial,
+.add-compact-label {
+  display: none;
 }
 
 .sidebar-title {
@@ -54,26 +62,81 @@
   opacity: 0.85;
 }
 
-@media (max-width: 700px) {
+/* Medium screens: narrower sidebar and smaller labels */
+@media (max-width: 1000px) {
   .sidebar {
-    width: 100%;
-    min-width: 0;
-    min-height: auto;
-    padding: 18px 16px;
-    gap: 16px;
+    width: 180px;
+    min-width: 180px;
+    padding: 24px 12px;
+    gap: 24px;
   }
 
-  .sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .sidebar-title {
+    font-size: 17px;
   }
 
   .nav-button {
-    flex: 1;
+    padding: 11px 10px;
+    font-size: 13px;
+  }
+
+  .add-transaction-button {
+    padding: 11px 8px;
+    font-size: 12px;
+  }
+}
+
+/* Small screens: compact vertical rail */
+@media (max-width: 700px) {
+  .sidebar {
+    width: 60px;
+    min-width: 60px;
+    min-height: 100vh;
+    padding: 18px 6px;
+    gap: 24px;
+  }
+
+  .sidebar-full-title,
+  .nav-label,
+  .add-full-label {
+    display: none;
+  }
+
+  .sidebar-compact-title,
+  .nav-initial {
+    display: inline;
+  }
+
+  .sidebar-title {
+    font-size: 14px;
     text-align: center;
+  }
+
+  .sidebar-nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .nav-button {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
   }
 
   .add-transaction-button {
     width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+    text-align: center;
+  }
+
+  .add-compact-label {
+    display: inline;
+    font-size: 20px;
+    line-height: 1;
   }
 }

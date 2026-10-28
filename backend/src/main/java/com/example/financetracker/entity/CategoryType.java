@@ -1,17 +1,31 @@
+
 package com.example.financetracker.entity;
 
 public enum CategoryType {
     HOUSING,
     UTILITIES,
+    PHONE_INTERNET,
     SUBSCRIPTION,
     GROCERY,
     DINING,
     ENTERTAINMENT,
     TRANSPORTATION,
+    GAS_FUEL,
+    AUTO_MAINTENANCE,
     HEALTHCARE,
+    INSURANCE,
     TRAVEL,
     SHOPPING,
     PERSONAL_CARE,
     EDUCATION,
+    PETS,
+    GIFTS_DONATIONS,
+    TAXES,
+    DEBT_PAYMENT,
+    CHILDCARE,
+    FITNESS,
+    HOME_MAINTENANCE,
+    FEES,
+    WORK_EXPENSES,
     OTHER
 }
