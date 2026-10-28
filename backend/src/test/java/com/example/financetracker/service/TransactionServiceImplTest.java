@@ -1,7 +1,8 @@
 package com.example.financetracker.service;
 
 import com.example.financetracker.dto.TransactionRequest;
-import com.example.financetracker.entity.CategoryType;
+import com.example.financetracker.entity.ExpenseCategoryType;
+import com.example.financetracker.entity.IncomeSourceType;
 import com.example.financetracker.entity.Transaction;
 import com.example.financetracker.entity.TransactionType;
 import com.example.financetracker.exception.TransactionNotFoundException;
@@ -31,33 +32,62 @@ class TransactionServiceImplTest {
     @InjectMocks
     private TransactionServiceImpl transactionService;
 
-    private Transaction testTransaction;
-    private TransactionRequest testRequest;
+    private Transaction testExpenseTransaction;
+    private Transaction testIncomeTransaction;
+    private TransactionRequest testExpenseRequest;
+    private TransactionRequest testIncomeRequest;
 
     @BeforeEach
     void setUp() {
-        testTransaction = new Transaction(
+        testExpenseTransaction = new Transaction(
                 "Test transaction",
                 new BigDecimal("25.50"),
                 TransactionType.EXPENSE,
-                CategoryType.GROCERY,
+                ExpenseCategoryType.GROCERY,
+                null,
                 LocalDate.of(2026, 10, 1)
         );
 
-        testRequest = new TransactionRequest();
-        testRequest.setDescription("Test transaction");
-        testRequest.setAmount(new BigDecimal("25.50"));
-        testRequest.setType(TransactionType.EXPENSE);
-        testRequest.setCategory(CategoryType.GROCERY);
-        testRequest.setDate(LocalDate.of(2026, 10, 1));
+        testIncomeTransaction = new Transaction(
+                "Test Income",
+                new BigDecimal("1500.00"),
+                TransactionType.INCOME,
+                null,
+                IncomeSourceType.SALARY,
+                LocalDate.of(2026, 10, 3)
+        );
+
+        testExpenseRequest = new TransactionRequest();
+        testExpenseRequest.setDescription("Test transaction");
+        testExpenseRequest.setAmount(new BigDecimal("25.50"));
+        testExpenseRequest.setType(TransactionType.EXPENSE);
+        testExpenseRequest.setExpenseCategory(ExpenseCategoryType.GROCERY);
+        testExpenseRequest.setDate(LocalDate.of(2026, 10, 1));
+
+        testIncomeRequest = new TransactionRequest();
+        testIncomeRequest.setDescription("Test income");
+        testIncomeRequest.setAmount(new BigDecimal("1500.00"));
+        testIncomeRequest.setType(TransactionType.INCOME);
+        testIncomeRequest.setIncomeSource(IncomeSourceType.SALARY);
+        testIncomeRequest.setDate(LocalDate.of(2026, 10, 3));
     }
 
     @Test
-    void saveTransactionMapsRequestToEntity() {
+    void saveTransactionThrowsWhenRequestIsNull() {
+        assertThrows(
+                NullPointerException.class,
+                () -> transactionService.saveTransaction(null)
+        );
+
+        verifyNoInteractions(transactionRepository);
+    }
+
+    @Test
+    void saveExpenseMapsRequestToEntity() {
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        transactionService.saveTransaction(testRequest);
+        transactionService.saveTransaction(testExpenseRequest);
 
         ArgumentCaptor<Transaction> captor =
                 ArgumentCaptor.forClass(Transaction.class);
@@ -69,14 +99,31 @@ class TransactionServiceImplTest {
         assertEquals("Test transaction", savedTransaction.getDescription());
         assertEquals(new BigDecimal("25.50"), savedTransaction.getAmount());
         assertEquals(TransactionType.EXPENSE, savedTransaction.getType());
-        assertEquals(CategoryType.GROCERY, savedTransaction.getCategory());
+        assertEquals(ExpenseCategoryType.GROCERY, savedTransaction.getExpenseCategory());
         assertEquals(LocalDate.of(2026, 10, 1), savedTransaction.getDate());
+    }
+
+    @Test
+    void saveIncomeMapsRequestToEntity() {
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Transaction result = transactionService.saveTransaction(testIncomeRequest);
+
+        assertEquals("Test income", result.getDescription());
+        assertEquals(new BigDecimal("1500.00"), result.getAmount());
+        assertEquals(TransactionType.INCOME, result.getType());
+        assertEquals(IncomeSourceType.SALARY, result.getIncomeSource());
+        assertNull(result.getExpenseCategory());
+        assertEquals(LocalDate.of(2026, 10, 3), result.getDate());
+
+        verify(transactionRepository).save(any(Transaction.class));
     }
 
     @Test
     void fetchTransactionReturnsTransactionWhenFound() {
         when(transactionRepository.findById(1L))
-                .thenReturn(Optional.of(testTransaction));
+                .thenReturn(Optional.of(testExpenseTransaction));
 
         Transaction result = transactionService.fetchTransaction(1L);
 
@@ -99,25 +146,39 @@ class TransactionServiceImplTest {
 
     @Test
     void fetchTransactionListReturnsAllTransactions() {
-        List<Transaction> transactions = List.of(testTransaction);
+        List<Transaction> transactions = List.of(testExpenseTransaction);
 
         when(transactionRepository.findAll()).thenReturn(transactions);
 
         List<Transaction> result = transactionService.fetchTransactionList();
 
         assertEquals(1, result.size());
-        assertEquals(testTransaction, result.get(0));
+        assertEquals(testExpenseTransaction, result.getFirst());
         verify(transactionRepository).findAll();
     }
 
     @Test
-    void updateTransactionThrowsWhenNotFound(){
+    void updateTransactionThrowsWhenRequestIsNull() {
+        when(transactionRepository.findById(1L))
+                .thenReturn(Optional.of(testExpenseTransaction));
+
+        assertThrows(
+                NullPointerException.class,
+                () -> transactionService.updateTransaction(null, 1L)
+        );
+
+        verify(transactionRepository).findById(1L);
+        verify(transactionRepository, never()).save(any(Transaction.class));
+    }
+
+    @Test
+    void updateTransactionThrowsWhenNotFound() {
         when(transactionRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
         assertThrows(
                 TransactionNotFoundException.class,
-                () -> transactionService.updateTransaction(testRequest, 99L)
+                () -> transactionService.updateTransaction(testExpenseRequest, 99L)
         );
 
         verify(transactionRepository).findById(99L);
@@ -126,195 +187,276 @@ class TransactionServiceImplTest {
     @Test
     void updateTransactionDescriptionValid() {
         //set fields to null to isolate change
-        clearRequestFields();
+        clearExpenseRequestFields();
         // Arrange: change the description in the request
-        testRequest.setDescription("Updated Test");
+        testExpenseRequest.setDescription("Updated Test");
 
         mockSuccessfulUpdate(1L);
 
         // Act: call the service method
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
         // Assert: verify the description was updated
         assertEquals("Updated Test", result.getDescription());
         // Assert: verify no other fields were updated
         assertEquals(new BigDecimal("25.50"), result.getAmount());
         assertEquals(TransactionType.EXPENSE, result.getType());
-        assertEquals(CategoryType.GROCERY, result.getCategory());
+        assertEquals(ExpenseCategoryType.GROCERY, result.getExpenseCategory());
         assertEquals(LocalDate.of(2026, 10, 1), result.getDate());
 
         // Verify that the repository saved the updated transaction
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionDescriptionNull(){
-        testRequest.setDescription(null);
+    void updateTransactionDescriptionNull() {
+        testExpenseRequest.setDescription(null);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getDescription(), result.getDescription());
+        assertEquals(testExpenseTransaction.getDescription(), result.getDescription());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionDescriptionEmpty(){
-        clearRequestFields();
-        testRequest.setDescription("");
+    void updateTransactionDescriptionEmpty() {
+        clearExpenseRequestFields();
+        testExpenseRequest.setDescription("");
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getDescription(), result.getDescription());
+        assertEquals(testExpenseTransaction.getDescription(), result.getDescription());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionAmountValid(){
-        clearRequestFields();
+    void updateTransactionAmountValid() {
+        clearExpenseRequestFields();
         BigDecimal updated = new BigDecimal("3.50");
-        testRequest.setAmount(updated);
+        testExpenseRequest.setAmount(updated);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
         assertEquals(updated, result.getAmount());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionAmountNull(){
-        testRequest.setAmount(null);
+    void updateTransactionAmountNull() {
+        testExpenseRequest.setAmount(null);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getAmount(), result.getAmount());
+        assertEquals(testExpenseTransaction.getAmount(), result.getAmount());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionAmountZero(){
-        clearRequestFields();
-        testRequest.setAmount(BigDecimal.ZERO);
+    void updateTransactionAmountZero() {
+        clearExpenseRequestFields();
+        testExpenseRequest.setAmount(BigDecimal.ZERO);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getAmount(), result.getAmount());
+        assertEquals(testExpenseTransaction.getAmount(), result.getAmount());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionAmountNegative(){
-        clearRequestFields();
+    void updateTransactionAmountNegative() {
+        clearExpenseRequestFields();
         BigDecimal updated = new BigDecimal("-3.50");
-        testRequest.setAmount(updated);
+        testExpenseRequest.setAmount(updated);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getAmount(), result.getAmount());
+        assertEquals(testExpenseTransaction.getAmount(), result.getAmount());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionTypeValid(){
-        clearRequestFields();
-        testRequest.setType(TransactionType.INCOME);
+    void updateTransactionTypeNull() {
+        testExpenseRequest.setType(null);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
+
+        assertEquals(testExpenseTransaction.getType(), result.getType());
+
+        verify(transactionRepository).save(testExpenseTransaction);
+    }
+
+    @Test
+    void updateExpenseToIncomeWithNullSourcePreservesNullSource() {
+        clearExpenseRequestFields();
+        testExpenseRequest.setType(TransactionType.INCOME);
+
+        mockSuccessfulUpdate(1L);
+
+        Transaction result =
+                transactionService.updateTransaction(testExpenseRequest, 1L);
 
         assertEquals(TransactionType.INCOME, result.getType());
+        assertNull(result.getIncomeSource());
+        assertNull(result.getExpenseCategory());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionTypeNull(){
-        testRequest.setType(null);
+    void updateIncomeToExpenseWithNullCategoryPreservesNullCategory() {
+        testIncomeRequest.setType(TransactionType.EXPENSE);
+        testIncomeRequest.setExpenseCategory(null);
+
+        when(transactionRepository.findById(2L))
+                .thenReturn(Optional.of(testIncomeTransaction));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Transaction result =
+                transactionService.updateTransaction(testIncomeRequest, 2L);
+
+        assertEquals(TransactionType.EXPENSE, result.getType());
+        assertNull(result.getExpenseCategory());
+        assertNull(result.getIncomeSource());
+
+        verify(transactionRepository).save(testIncomeTransaction);
+    }
+
+    @Test
+    void updateExpenseCategoryValid() {
+        clearExpenseRequestFields();
+        testExpenseRequest.setExpenseCategory(ExpenseCategoryType.EDUCATION);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getType(), result.getType());
+        assertEquals(ExpenseCategoryType.EDUCATION, result.getExpenseCategory());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionCategoryValid(){
-        clearRequestFields();
-        testRequest.setCategory(CategoryType.EDUCATION);
+    void updateExpenseCategoryNull() {
+        testExpenseRequest.setExpenseCategory(null);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(CategoryType.EDUCATION, result.getCategory());
+        assertEquals(testExpenseTransaction.getExpenseCategory(), result.getExpenseCategory());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionCategoryNull(){
-        testRequest.setCategory(null);
+    void updateIncomeSourceValid() {
+        testIncomeRequest.setIncomeSource(IncomeSourceType.FREELANCE);
+
+        when(transactionRepository.findById(2L))
+                .thenReturn(Optional.of(testIncomeTransaction));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Transaction result =
+                transactionService.updateTransaction(testIncomeRequest, 2L);
+
+        assertEquals(IncomeSourceType.FREELANCE, result.getIncomeSource());
+        assertNull(result.getExpenseCategory());
+
+        verify(transactionRepository).save(testIncomeTransaction);
+    }
+
+
+    @Test
+    void updateTransactionFromExpenseToIncomeClearsExpenseCategory() {
+        clearExpenseRequestFields();
+        testExpenseRequest.setType(TransactionType.INCOME);
+        testExpenseRequest.setIncomeSource(IncomeSourceType.SALARY);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result =
+                transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getCategory(), result.getCategory());
+        assertEquals(TransactionType.INCOME, result.getType());
+        assertEquals(IncomeSourceType.SALARY, result.getIncomeSource());
+        assertNull(result.getExpenseCategory());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionDateValid(){
-        clearRequestFields();
+    void updateTransactionFromIncomeToExpenseClearsIncomeSource() {
+        clearExpenseRequestFields();
+        testIncomeRequest.setType(TransactionType.EXPENSE);
+        testIncomeRequest.setExpenseCategory(ExpenseCategoryType.GROCERY);
+
+        when(transactionRepository.findById(2L))
+                .thenReturn(Optional.of(testIncomeTransaction));
+        when(transactionRepository.save(any(Transaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Transaction result =
+                transactionService.updateTransaction(testIncomeRequest, 2L);
+
+        assertEquals(TransactionType.EXPENSE, result.getType());
+        assertEquals(ExpenseCategoryType.GROCERY, result.getExpenseCategory());
+        assertNull(result.getIncomeSource());
+
+        verify(transactionRepository).save(testIncomeTransaction);
+    }
+
+    @Test
+    void updateTransactionDateValid() {
+        clearExpenseRequestFields();
         LocalDate updated = LocalDate.of(2026, 9, 28);
-        testRequest.setDate(updated);
+        testExpenseRequest.setDate(updated);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
         assertEquals(updated, result.getDate());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void updateTransactionDateNull(){
-        testRequest.setDate(null);
+    void updateTransactionDateNull() {
+        testExpenseRequest.setDate(null);
 
         mockSuccessfulUpdate(1L);
 
-        Transaction result = transactionService.updateTransaction(testRequest, 1L);
+        Transaction result = transactionService.updateTransaction(testExpenseRequest, 1L);
 
-        assertEquals(testTransaction.getDate(), result.getDate());
+        assertEquals(testExpenseTransaction.getDate(), result.getDate());
 
-        verify(transactionRepository).save(testTransaction);
+        verify(transactionRepository).save(testExpenseTransaction);
     }
 
     @Test
-    void deleteTransactionIdNotFound(){
+    void deleteTransactionIdNotFound() {
         when(transactionRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
@@ -330,29 +472,30 @@ class TransactionServiceImplTest {
     @Test
     void deleteTransactionSuccess() {
         when(transactionRepository.findById(1L))
-                .thenReturn(Optional.of(testTransaction));
+                .thenReturn(Optional.of(testExpenseTransaction));
 
         transactionService.deleteTransactionById(1L);
 
         verify(transactionRepository).findById(1L);
-        verify(transactionRepository).delete(testTransaction);
+        verify(transactionRepository).delete(testExpenseTransaction);
     }
 
     private void mockSuccessfulUpdate(Long id) {
         // Tell Mockito that the transaction already exists
         when(transactionRepository.findById(id))
-                .thenReturn(Optional.of(testTransaction));
+                .thenReturn(Optional.of(testExpenseTransaction));
 
         // Tell Mockito what to return when the updated transaction is saved
         when(transactionRepository.save(any(Transaction.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
-    private void clearRequestFields() {
-        testRequest.setDescription(null);
-        testRequest.setAmount(null);
-        testRequest.setType(null);
-        testRequest.setCategory(null);
-        testRequest.setDate(null);
+    private void clearExpenseRequestFields() {
+        testExpenseRequest.setDescription(null);
+        testExpenseRequest.setAmount(null);
+        testExpenseRequest.setType(null);
+        testExpenseRequest.setExpenseCategory(null);
+        testExpenseRequest.setIncomeSource(null);
+        testExpenseRequest.setDate(null);
     }
 }

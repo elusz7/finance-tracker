@@ -1,7 +1,6 @@
-
 package com.example.financetracker.entity;
 
-public enum CategoryType {
+public enum ExpenseCategoryType {
     HOUSING,
     UTILITIES,
     PHONE_INTERNET,

@@ -35,7 +35,9 @@ function App() {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("EXPENSE");
-  const [category, setCategory] = useState("GROCERY");
+  const [expenseCategory, setExpenseCategory] = useState("GROCERY");
+  const [incomeSource, setIncomeSource] = useState("SALARY");
+
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -115,7 +117,8 @@ function App() {
   const [editDescription, setEditDescription] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editType, setEditType] = useState("EXPENSE");
-  const [editCategory, setEditCategory] = useState("GROCERY");
+  const [editExpenseCategory, setEditExpenseCategory] = useState("GROCERY");
+  const [editIncomeSource, setEditIncomeSource] = useState("SALARY");
   const [editDate, setEditDate] = useState(getTodayDate());
   const [editFormMessage, setEditFormMessage] = useState("");
 
@@ -124,7 +127,8 @@ function App() {
     setEditDescription(transaction.description || "");
     setEditAmount(String(transaction.amount));
     setEditType(transaction.type);
-    setEditCategory(transaction.category);
+    setEditExpenseCategory(transaction.expenseCategory || "GROCERY");
+    setEditIncomeSource(transaction.incomeSource || "SALARY");
     setEditDate(transaction.date);
     setEditFormMessage("");
     setIsEditModalOpen(true);
@@ -140,7 +144,8 @@ function App() {
       description: editDescription,
       amount: Number(editAmount),
       type: editType,
-      category: editCategory,
+      expenseCategory: editType === "EXPENSE" ? editExpenseCategory : null,
+      incomeSource: editType === "INCOME" ? editIncomeSource : null,
       date: editDate,
     };
 
@@ -190,7 +195,8 @@ function App() {
       description,
       amount: Number(amount),
       type,
-      category,
+      expenseCategory: type === "EXPENSE" ? expenseCategory : null,
+      incomeSource: type === "INCOME" ? incomeSource : null,
       date,
     };
 
@@ -220,7 +226,8 @@ function App() {
       setDescription("");
       setAmount("");
       setType("EXPENSE");
-      setCategory("GROCERY");
+      setExpenseCategory("GROCERY");
+      setIncomeSource("SALARY");
       setDate(getTodayDate());
       setFormMessage("");
       setSuccessType(savedTransaction.type);
@@ -239,7 +246,8 @@ function App() {
     setDescription("");
     setAmount("");
     setType("EXPENSE");
-    setCategory("GROCERY");
+    setExpenseCategory("GROCERY");
+    setIncomeSource("SALARY");
     setDate(getTodayDate());
     setFormMessage("");
   };
@@ -262,7 +270,11 @@ function App() {
         return false;
       }
 
-      if (filterCategory !== "ALL" && transaction.category !== filterCategory) {
+      if (
+        filterCategory !== "ALL" &&
+        transaction.expenseCategory !== filterCategory &&
+        transaction.incomeSource !== filterCategory
+      ) {
         return false;
       }
 
@@ -370,13 +382,15 @@ function App() {
             description={description}
             amount={amount}
             type={type}
-            category={category}
+            expenseCategory={expenseCategory}
+            incomeSource={incomeSource}
             date={date}
             message={formMessage}
             onDescriptionChange={setDescription}
             onAmountChange={setAmount}
             onTypeChange={setType}
-            onCategoryChange={setCategory}
+            onExpenseCategoryChange={setExpenseCategory}
+            onIncomeSourceChange={setIncomeSource}
             onDateChange={setDate}
             onSubmit={handleSubmit}
             onClose={closeAddModal}
@@ -390,13 +404,15 @@ function App() {
             description={editDescription}
             amount={editAmount}
             type={editType}
-            category={editCategory}
+            expenseCategory={editExpenseCategory}
+            incomeSource={editIncomeSource}
             date={editDate}
             message={editFormMessage}
             onDescriptionChange={setEditDescription}
             onAmountChange={setEditAmount}
             onTypeChange={setEditType}
-            onCategoryChange={setEditCategory}
+            onExpenseCategoryChange={setEditExpenseCategory}
+            onIncomeSourceChange={setEditIncomeSource}
             onDateChange={setEditDate}
             onSubmit={handleEditSubmit}
             onClose={() => {

@@ -21,18 +21,22 @@ public class Transaction {
     private TransactionType type;
 
     @Enumerated(EnumType.STRING)
-    private CategoryType category;
+    private ExpenseCategoryType expenseCategory;
+
+    @Enumerated(EnumType.STRING)
+    private IncomeSourceType incomeSource;
 
     @Column(nullable = false)
     private LocalDate date;
 
     protected Transaction() {}
 
-    public Transaction(String description, BigDecimal amount, TransactionType type, CategoryType category, LocalDate date) {
+    public Transaction(String description, BigDecimal amount, TransactionType type, ExpenseCategoryType expenseCategory, IncomeSourceType incomeSource, LocalDate date) {
         this.description = description;
         this.amount = amount;
         this.type = type;
-        this.category = category;
+        this.expenseCategory = expenseCategory;
+        this.incomeSource = incomeSource;
         this.date = date;
     }
 
@@ -64,13 +68,17 @@ public class Transaction {
         this.type = type;
     }
 
-    public CategoryType getCategory(){
-        return category;
+    public ExpenseCategoryType getExpenseCategory(){
+        return expenseCategory;
     }
 
-    public void setCategory(CategoryType category){
-        this.category = category;
+    public void setExpenseCategory(ExpenseCategoryType expenseCategory){
+        this.expenseCategory = expenseCategory;
     }
+
+    public IncomeSourceType getIncomeSource() { return incomeSource; }
+
+    public void setIncomeSource(IncomeSourceType incomeSource) { this.incomeSource = incomeSource; }
 
     public LocalDate getDate() {
         return date;

@@ -1,26 +1,30 @@
 package com.example.financetracker.dto;
 
-import com.example.financetracker.entity.CategoryType;
-import com.example.financetracker.entity.Transaction;
+import com.example.financetracker.entity.ExpenseCategoryType;
+import com.example.financetracker.entity.IncomeSourceType;
 import com.example.financetracker.entity.TransactionType;
+import com.example.financetracker.validation.ValidTransactionClassification;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@ValidTransactionClassification
 public class TransactionRequest {
     private String description;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0", inclusive = false, message = "Amount must be greater than 0")
+    @DecimalMin(value = "0", inclusive = false,
+            message = "Amount must be greater than 0")
     private BigDecimal amount;
 
     @NotNull(message = "Transaction Type is required")
     private TransactionType type;
 
-    @NotNull(message = "Category Type is required")
-    private CategoryType category;
+    private ExpenseCategoryType expenseCategory;
+
+    private IncomeSourceType incomeSource;
 
     @NotNull(message = "Transaction Date is required")
     private LocalDate date;
@@ -41,12 +45,20 @@ public class TransactionRequest {
         this.amount = amount;
     }
 
-    public CategoryType getCategory() {
-        return category;
+    public ExpenseCategoryType getExpenseCategory() {
+        return expenseCategory;
     }
 
-    public void setCategory(CategoryType category) {
-        this.category = category;
+    public void setExpenseCategory(ExpenseCategoryType expenseCategory) {
+        this.expenseCategory = expenseCategory;
+    }
+
+    public IncomeSourceType getIncomeSource() {
+        return incomeSource;
+    }
+
+    public void setIncomeSource(IncomeSourceType incomeSource) {
+        this.incomeSource = incomeSource;
     }
 
     public TransactionType getType() {
