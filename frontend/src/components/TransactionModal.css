@@ -1,0 +1,68 @@
+/* Transaction modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Modal container */
+.add-transaction.modal-content {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 0;
+  border: 1px solid #37445a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Modal heading and close button */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-close {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.add-transaction .modal-header .modal-close {
+  color: #ffffff;
+  background: transparent;
+  padding: 0 8px;
+}
+
+/* Modal action buttons */
+.add-transaction .modal-actions {
+  display: flex;
+  width: 100%;
+  margin-top: 8px;
+  gap: 12px;
+}
+
+.add-transaction .modal-actions button {
+  flex: 1;
+  padding: 14px 16px;
+}
+
+@media (max-width: 600px) {
+  .add-transaction.modal-content {
+    padding: 18px;
+  }
+}

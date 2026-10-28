@@ -2,6 +2,10 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import SummaryCards from "./components/SummaryCards";
 import TransactionList from "./components/TransactionList";
+import TransactionModal from "./components/TransactionModal";
+import TransactionFilters from "./components/TransactionFilters";
+import RecentTransactions from "./components/RecentTransactions";
+import SuccessToast from "./components/SuccessToast";
 
 import { useEffect, useState } from "react";
 
@@ -318,44 +322,11 @@ function App() {
                 totalExpenses={totalExpenses}
               />
 
-              <section className="transactions">
-                <div className="transactions-header">
-                  <h2>Recent Transactions</h2>
-
-                  <div className="transaction-filter">
-                    <label htmlFor="category-filter">Filter by category:</label>
-
-                    <select
-                      id="category-filter"
-                      value={selectedCategory}
-                      onChange={(event) =>
-                        setSelectedCategory(event.target.value)
-                      }
-                    >
-                      <option value="ALL">All Categories</option>
-                      <option value="HOUSING">Housing</option>
-                      <option value="UTILITIES">Utilities</option>
-                      <option value="SUBSCRIPTION">Subscriptions</option>
-                      <option value="GROCERY">Groceries</option>
-                      <option value="DINING">Dining</option>
-                      <option value="ENTERTAINMENT">Entertainment</option>
-                      <option value="TRANSPORTATION">Transportation</option>
-                      <option value="HEALTHCARE">Healthcare</option>
-                      <option value="TRAVEL">Travel</option>
-                      <option value="SHOPPING">Shopping</option>
-                      <option value="PERSONAL_CARE">Personal Care</option>
-                      <option value="EDUCATION">Education</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                <TransactionList
-                  transactions={filteredTransactions}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              </section>
+              <RecentTransactions
+                transactions={filteredTransactions}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+              />
             </div>
           </div>
         )}
@@ -367,104 +338,20 @@ function App() {
               <p>View and manage all your income and expenses.</p>
             </header>
 
-            <div className="transaction-filters">
-              <div className="filter-row">
-                <label>
-                  Type
-                  <select
-                    value={filterType}
-                    onChange={(event) => setFilterType(event.target.value)}
-                  >
-                    <option value="ALL">All Types</option>
-                    <option value="INCOME">Income</option>
-                    <option value="EXPENSE">Expense</option>
-                  </select>
-                </label>
-
-                <label>
-                  Category
-                  <select
-                    value={filterCategory}
-                    onChange={(event) => setFilterCategory(event.target.value)}
-                  >
-                    <option value="ALL">All Categories</option>
-                    <option value="HOUSING">Housing</option>
-                    <option value="UTILITIES">Utilities</option>
-                    <option value="SUBSCRIPTION">Subscription</option>
-                    <option value="GROCERY">Grocery</option>
-                    <option value="DINING">Dining</option>
-                    <option value="ENTERTAINMENT">Entertainment</option>
-                    <option value="TRANSPORTATION">Transportation</option>
-                    <option value="HEALTHCARE">Healthcare</option>
-                    <option value="TRAVEL">Travel</option>
-                    <option value="SHOPPING">Shopping</option>
-                    <option value="PERSONAL_CARE">Personal Care</option>
-                    <option value="EDUCATION">Education</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className="filter-row">
-                <label>
-                  Start Date
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(event) => setStartDate(event.target.value)}
-                  />
-                </label>
-
-                <label>
-                  End Date
-                  <input
-                    type="date"
-                    value={endDate}
-                    min={startDate || undefined}
-                    onChange={(event) => setEndDate(event.target.value)}
-                  />
-                </label>
-
-                <label>
-                  Min Amount ($)
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={minAmount}
-                    onChange={(event) => setMinAmount(event.target.value)}
-                    placeholder="No minimum"
-                  />
-                </label>
-
-                <label>
-                  Max Amount ($)
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={maxAmount}
-                    onChange={(event) => setMaxAmount(event.target.value)}
-                    placeholder="No maximum"
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  className="button-cancel"
-                  onClick={() => {
-                    setFilterType("ALL");
-                    setFilterCategory("ALL");
-                    setStartDate("");
-                    setEndDate("");
-                    setMinAmount("");
-                    setMaxAmount("");
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
-            </div>
+            <TransactionFilters
+              filterType={filterType}
+              setFilterType={setFilterType}
+              filterCategory={filterCategory}
+              setFilterCategory={setFilterCategory}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              minAmount={minAmount}
+              setMinAmount={setMinAmount}
+              maxAmount={maxAmount}
+              setMaxAmount={setMaxAmount}
+            />
 
             <section className="transactions">
               <h2>All Transactions ({allFilteredTransactions.length})</h2>
@@ -479,250 +366,55 @@ function App() {
         )}
 
         {isAddModalOpen && (
-          <div className="modal-overlay" onClick={() => closeAddModal()}>
-            <section
-              className="add-transaction modal-content"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-title"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="modal-header">
-                <h2 id="modal-title">Add Transaction</h2>
-
-                <button
-                  type="button"
-                  className="modal-close"
-                  aria-label="Close modal"
-                  onClick={closeAddModal}
-                >
-                  ×
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit}>
-                <label>
-                  Description
-                  <input
-                    type="text"
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    placeholder="e.g. Weekly Groceries"
-                  />
-                </label>
-
-                <label>
-                  Amount ($)
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
-                    required
-                  />
-                </label>
-
-                <label>
-                  Type
-                  <select
-                    value={type}
-                    onChange={(event) => setType(event.target.value)}
-                  >
-                    <option value="EXPENSE">Expense</option>
-                    <option value="INCOME">Income</option>
-                  </select>
-                </label>
-
-                <label>
-                  Category
-                  <select
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                  >
-                    <option value="HOUSING">Housing</option>
-                    <option value="UTILITIES">Utilities</option>
-                    <option value="SUBSCRIPTION">Subscription</option>
-                    <option value="GROCERY">Grocery</option>
-                    <option value="DINING">Dining</option>
-                    <option value="ENTERTAINMENT">Entertainment</option>
-                    <option value="TRANSPORTATION">Transportation</option>
-                    <option value="HEALTHCARE">Healthcare</option>
-                    <option value="TRAVEL">Travel</option>
-                    <option value="SHOPPING">Shopping</option>
-                    <option value="PERSONAL_CARE">Personal Care</option>
-                    <option value="EDUCATION">Education</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </label>
-
-                <label>
-                  Date
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                    required
-                  />
-                </label>
-
-                <div className="modal-actions">
-                  <button
-                    type="submit"
-                    className={
-                      type === "EXPENSE" ? "button-expense" : "button-income"
-                    }
-                  >
-                    Add {type === "EXPENSE" ? "Expense" : "Income"}
-                  </button>
-                </div>
-
-                {formMessage && <p role="status">{formMessage}</p>}
-              </form>
-            </section>
-          </div>
+          <TransactionModal
+            title="Add Transaction"
+            description={description}
+            amount={amount}
+            type={type}
+            category={category}
+            date={date}
+            message={formMessage}
+            onDescriptionChange={setDescription}
+            onAmountChange={setAmount}
+            onTypeChange={setType}
+            onCategoryChange={setCategory}
+            onDateChange={setDate}
+            onSubmit={handleSubmit}
+            onClose={closeAddModal}
+            submitLabel={`Add ${type === "EXPENSE" ? "Expense" : "Income"}`}
+          />
         )}
 
         {isEditModalOpen && editingTransaction && (
-          <div
-            className="modal-overlay"
-            onClick={() => {
+          <TransactionModal
+            title="Edit Transaction"
+            description={editDescription}
+            amount={editAmount}
+            type={editType}
+            category={editCategory}
+            date={editDate}
+            message={editFormMessage}
+            onDescriptionChange={setEditDescription}
+            onAmountChange={setEditAmount}
+            onTypeChange={setEditType}
+            onCategoryChange={setEditCategory}
+            onDateChange={setEditDate}
+            onSubmit={handleEditSubmit}
+            onClose={() => {
               setIsEditModalOpen(false);
               setEditingTransaction(null);
               setEditFormMessage("");
             }}
-          >
-            <section
-              className="add-transaction modal-content"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="edit-modal-title"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="modal-header">
-                <h2 id="edit-modal-title">Edit Transaction</h2>
-
-                <button
-                  type="button"
-                  className="modal-close"
-                  aria-label="Close modal"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditingTransaction(null);
-                    setEditFormMessage("");
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-
-              <form onSubmit={handleEditSubmit}>
-                <label>
-                  Description
-                  <input
-                    type="text"
-                    value={editDescription}
-                    onChange={(event) => setEditDescription(event.target.value)}
-                  />
-                </label>
-
-                <label>
-                  Amount ($)
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={editAmount}
-                    onChange={(event) => setEditAmount(event.target.value)}
-                    required
-                  />
-                </label>
-
-                <label>
-                  Type
-                  <select
-                    value={editType}
-                    onChange={(event) => setEditType(event.target.value)}
-                  >
-                    <option value="EXPENSE">Expense</option>
-                    <option value="INCOME">Income</option>
-                  </select>
-                </label>
-
-                <label>
-                  Category
-                  <select
-                    value={editCategory}
-                    onChange={(event) => setEditCategory(event.target.value)}
-                  >
-                    <option value="HOUSING">Housing</option>
-                    <option value="UTILITIES">Utilities</option>
-                    <option value="SUBSCRIPTION">Subscription</option>
-                    <option value="GROCERY">Grocery</option>
-                    <option value="DINING">Dining</option>
-                    <option value="ENTERTAINMENT">Entertainment</option>
-                    <option value="TRANSPORTATION">Transportation</option>
-                    <option value="HEALTHCARE">Healthcare</option>
-                    <option value="TRAVEL">Travel</option>
-                    <option value="SHOPPING">Shopping</option>
-                    <option value="PERSONAL_CARE">Personal Care</option>
-                    <option value="EDUCATION">Education</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </label>
-
-                <label>
-                  Date
-                  <input
-                    type="date"
-                    value={editDate}
-                    onChange={(event) => setEditDate(event.target.value)}
-                    required
-                  />
-                </label>
-
-                {editFormMessage && <p role="alert">{editFormMessage}</p>}
-
-                <div className="modal-actions">
-                  <button
-                    type="button"
-                    className="button-cancel"
-                    onClick={() => {
-                      setIsEditModalOpen(false);
-                      setEditingTransaction(null);
-                      setEditFormMessage("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className={
-                      editType === "EXPENSE"
-                        ? "button-expense"
-                        : "button-income"
-                    }
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </section>
-          </div>
+            onCancel={() => {
+              setIsEditModalOpen(false);
+              setEditingTransaction(null);
+              setEditFormMessage("");
+            }}
+            submitLabel="Save Changes"
+          />
         )}
 
-        {successMessage && (
-          <div
-            className={`success-toast ${
-              successType === "INCOME" ? "toast-income" : "toast-expense"
-            }`}
-            role="status"
-          >
-            <span className="success-toast-icon">✓</span>
-            {successMessage}
-          </div>
-        )}
+        <SuccessToast message={successMessage} type={successType} />
       </main>
     </div>
   );

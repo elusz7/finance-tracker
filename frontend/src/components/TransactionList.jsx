@@ -5,25 +5,31 @@ function TransactionList({ transactions, onEdit, onDelete }) {
     <div className="transaction-list">
       {transactions.map((transaction) => (
         <div className="transaction-item" key={transaction.id}>
-          <div className="transaction-actions">
-            <button
-              className="edit-button"
-              onClick={() => onEdit(transaction)}
-              aria-label={`Edit ${transaction.description || "transaction"}`}
-              title="Edit transaction"
-            >
-              ✎
-            </button>
+          {(onEdit || onDelete) && (
+            <div className="transaction-actions">
+              {onEdit && (
+                <button
+                  className="edit-button"
+                  onClick={() => onEdit(transaction)}
+                  aria-label={`Edit ${transaction.description || "transaction"}`}
+                  title="Edit transaction"
+                >
+                  ✎
+                </button>
+              )}
 
-            <button
-              className="delete-button"
-              onClick={() => onDelete(transaction)}
-              aria-label={`Delete ${transaction.description || "transaction"}`}
-              title="Delete transaction"
-            >
-              ×
-            </button>
-          </div>
+              {onDelete && (
+                <button
+                  className="delete-button"
+                  onClick={() => onDelete(transaction)}
+                  aria-label={`Delete ${transaction.description || "transaction"}`}
+                  title="Delete transaction"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="transaction-info">
             <h3>{transaction.description || "Untitled transaction"}</h3>
