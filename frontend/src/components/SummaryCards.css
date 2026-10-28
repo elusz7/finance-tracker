@@ -1,0 +1,33 @@
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: var(--secondary-txt);
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.card p {
+  margin-bottom: 0;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+@media (max-width: 700px) {
+  .summary {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

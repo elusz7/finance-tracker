@@ -1,0 +1,159 @@
+
+/* Transaction list */
+.transaction-list {
+  max-height: 550px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* One horizontal row per transaction */
+.transaction-list .transaction-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 0;
+  background-color: var(--card-bg);
+  border: 1px solid #273449;
+  border-radius: 8px;
+}
+
+/* Edit and delete buttons on the left */
+.transaction-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.transaction-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 19px;
+  transition: background-color 0.2s ease;
+}
+
+/* Edit button — subtle blue */
+.edit-button {
+  background: #1e3a5f;
+  color: #7dd3fc;
+  border: 1px solid #285477;
+}
+
+.edit-button:hover {
+  background: #264b70;
+}
+
+/* Delete button — muted orange */
+.delete-button {
+  background: #422f25;
+  color: #fdba74;
+  border: 1px solid #70452c;
+}
+
+.delete-button:hover {
+  background: #573a2a;
+}
+
+/* Description and category/date in the middle */
+.transaction-info {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.transaction-info h3 {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 45%;
+  margin: 0;
+  color: var(--main-txt);
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transaction-info p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--secondary-txt);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Amount on the right */
+.transaction-income,
+.transaction-expense {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: bold;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.transaction-income {
+  color: var(--income-color);
+}
+
+.transaction-expense {
+  color: var(--expense-color);
+}
+
+/* Empty list */
+.empty-transactions {
+  padding: 20px;
+  color: var(--secondary-txt);
+  text-align: center;
+}
+
+/* Smaller screens */
+@media (max-width: 600px) {
+  .transaction-list .transaction-item {
+    gap: 8px;
+    padding: 10px 8px;
+  }
+
+  .transaction-actions {
+    gap: 4px;
+  }
+
+  .transaction-actions button {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .transaction-info {
+    gap: 6px;
+  }
+
+  .transaction-info h3 {
+    max-width: 40%;
+    font-size: 13px;
+  }
+
+  .transaction-info p {
+    font-size: 11px;
+  }
+
+  .transaction-income,
+  .transaction-expense {
+    font-size: 12px;
+  }
+}

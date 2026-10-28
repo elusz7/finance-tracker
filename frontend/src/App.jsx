@@ -1,4 +1,8 @@
 import "./App.css";
+import Sidebar from "./components/Sidebar";
+import SummaryCards from "./components/SummaryCards";
+import TransactionList from "./components/TransactionList";
+
 import { useEffect, useState } from "react";
 
 function App() {
@@ -10,6 +14,10 @@ function App() {
 
   // State to manage the visibility of the add transaction modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  //state for editing a transaction
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   // state for transaction filtering
   const [filterType, setFilterType] = useState("ALL");
@@ -52,6 +60,107 @@ function App() {
 
   // Calculate balance
   const balance = totalIncome - totalExpenses;
+
+  // Handle deleting a transaction
+  const handleDelete = async (transaction) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${transaction.description || "Untitled transaction"}"?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/transactions/${transaction.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Could not delete transaction.");
+      }
+
+      setTransactions((currentTransactions) =>
+        currentTransactions.filter((item) => item.id !== transaction.id),
+      );
+
+      setSuccessType(transaction.type);
+      setSuccessMessage("Transaction deleted successfully!");
+    } catch (error) {
+      window.alert(error.message);
+    }
+  };
+
+  //handle editing a transaction
+  const [editDescription, setEditDescription] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editType, setEditType] = useState("EXPENSE");
+  const [editCategory, setEditCategory] = useState("GROCERY");
+  const [editDate, setEditDate] = useState(getTodayDate());
+  const [editFormMessage, setEditFormMessage] = useState("");
+
+  const handleEdit = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditDescription(transaction.description || "");
+    setEditAmount(String(transaction.amount));
+    setEditType(transaction.type);
+    setEditCategory(transaction.category);
+    setEditDate(transaction.date);
+    setEditFormMessage("");
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    setEditFormMessage("");
+
+    if (!editingTransaction) return;
+
+    const updatedTransaction = {
+      description: editDescription,
+      amount: Number(editAmount),
+      type: editType,
+      category: editCategory,
+      date: editDate,
+    };
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/transactions/${editingTransaction.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedTransaction),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Could not update transaction. Please check your entries.",
+        );
+      }
+
+      const savedTransaction = await response.json();
+
+      setTransactions((currentTransactions) =>
+        currentTransactions.map((transaction) =>
+          transaction.id === savedTransaction.id
+            ? savedTransaction
+            : transaction,
+        ),
+      );
+
+      setSuccessType(savedTransaction.type);
+      setSuccessMessage("Transaction updated successfully!");
+      setIsEditModalOpen(false);
+      setEditingTransaction(null);
+    } catch (error) {
+      setEditFormMessage(error.message);
+    }
+  };
 
   // Handle form submission for adding a new transaction
   const handleSubmit = async (event) => {
@@ -188,39 +297,11 @@ function App() {
 
   return (
     <div className="app-layout">
-      <aside className="sidebar">
-        <h2 className="sidebar-title">Finance Tracker</h2>
-
-        <nav className="sidebar-nav">
-          <button
-            className={`nav-button ${activePage === "DASHBOARD" ? "active" : ""}`}
-            onClick={() => setActivePage("DASHBOARD")}
-          >
-            Dashboard
-          </button>
-
-          <button
-            className={`nav-button ${activePage === "TRANSACTIONS" ? "active" : ""}`}
-            onClick={() => setActivePage("TRANSACTIONS")}
-          >
-            Transactions
-          </button>
-
-          <button
-            className={`nav-button ${activePage === "REPORTS" ? "active" : ""}`}
-            onClick={() => setActivePage("REPORTS")}
-          >
-            Reports
-          </button>
-        </nav>
-
-        <button
-          className="add-transaction-button"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          + Add Transaction
-        </button>
-      </aside>
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+        onAddTransaction={() => setIsAddModalOpen(true)}
+      />
 
       <main className="main-content">
         {activePage === "DASHBOARD" && (
@@ -231,46 +312,11 @@ function App() {
             </header>
 
             <div>
-              <section className="summary">
-                <div className="card">
-                  <h3>Current Balance</h3>
-                  <p
-                    className={
-                      balance >= 0
-                        ? "transaction-income"
-                        : "transaction-expense"
-                    }
-                  >
-                    {balance >= 0 ? "+" : "−"}$
-                    {Math.abs(balance).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-
-                <div className="card">
-                  <h3>Income</h3>
-                  <p className="transaction-income">
-                    +$
-                    {totalIncome.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-
-                <div className="card">
-                  <h3>Expenses</h3>
-                  <p className="transaction-expense">
-                    −$
-                    {totalExpenses.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-              </section>
+              <SummaryCards
+                balance={balance}
+                totalIncome={totalIncome}
+                totalExpenses={totalExpenses}
+              />
 
               <section className="transactions">
                 <div className="transactions-header">
@@ -304,34 +350,11 @@ function App() {
                   </div>
                 </div>
 
-                {filteredTransactions.map((transaction) => (
-                  <div key={transaction.id} className="transaction-item">
-                    <div className="transaction-info">
-                      <h3>{transaction.description}</h3>
-                      <p>
-                        {transaction.category} · {transaction.date}
-                      </p>
-                    </div>
-
-                    <p
-                      className={
-                        transaction.type === "INCOME"
-                          ? "transaction-income"
-                          : "transaction-expense"
-                      }
-                    >
-                      {transaction.type === "INCOME" ? "+" : "−"}$
-                      {Number(transaction.amount).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </p>
-                  </div>
-                ))}
-
-                {filteredTransactions.length === 0 && (
-                  <p>No transactions found for this category.</p>
-                )}
+                <TransactionList
+                  transactions={filteredTransactions}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               </section>
             </div>
           </div>
@@ -445,43 +468,13 @@ function App() {
 
             <section className="transactions">
               <h2>All Transactions ({allFilteredTransactions.length})</h2>
-              <div className="transaction-list">
-                {allFilteredTransactions.map((transaction) => (
-                  <div key={transaction.id} className="transaction-item">
-                    <div className="transaction-info">
-                      <h3>
-                        {transaction.description || "Untitled transaction"}
-                      </h3>
-                      <p>
-                        {transaction.category} · {transaction.date}
-                      </p>
-                    </div>
-
-                    <p
-                      className={
-                        transaction.type === "INCOME"
-                          ? "transaction-income"
-                          : "transaction-expense"
-                      }
-                    >
-                      {transaction.type === "INCOME" ? "+" : "−"}$
-                      {Number(transaction.amount).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </p>
-                  </div>
-                ))}
-
-                {allFilteredTransactions.length === 0 && (
-                  <p className="empty-transactions">
-                    {transactions.length === 0
-                      ? "No transactions yet. Click + Add Transaction to get started."
-                      : "No transactions match your filters."}
-                  </p>
-                )}
-              </div>
             </section>
+
+            <TransactionList
+              transactions={allFilteredTransactions}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           </section>
         )}
 
@@ -585,6 +578,135 @@ function App() {
                 </div>
 
                 {formMessage && <p role="status">{formMessage}</p>}
+              </form>
+            </section>
+          </div>
+        )}
+
+        {isEditModalOpen && editingTransaction && (
+          <div
+            className="modal-overlay"
+            onClick={() => {
+              setIsEditModalOpen(false);
+              setEditingTransaction(null);
+              setEditFormMessage("");
+            }}
+          >
+            <section
+              className="add-transaction modal-content"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-modal-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2 id="edit-modal-title">Edit Transaction</h2>
+
+                <button
+                  type="button"
+                  className="modal-close"
+                  aria-label="Close modal"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingTransaction(null);
+                    setEditFormMessage("");
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleEditSubmit}>
+                <label>
+                  Description
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(event) => setEditDescription(event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  Amount ($)
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={editAmount}
+                    onChange={(event) => setEditAmount(event.target.value)}
+                    required
+                  />
+                </label>
+
+                <label>
+                  Type
+                  <select
+                    value={editType}
+                    onChange={(event) => setEditType(event.target.value)}
+                  >
+                    <option value="EXPENSE">Expense</option>
+                    <option value="INCOME">Income</option>
+                  </select>
+                </label>
+
+                <label>
+                  Category
+                  <select
+                    value={editCategory}
+                    onChange={(event) => setEditCategory(event.target.value)}
+                  >
+                    <option value="HOUSING">Housing</option>
+                    <option value="UTILITIES">Utilities</option>
+                    <option value="SUBSCRIPTION">Subscription</option>
+                    <option value="GROCERY">Grocery</option>
+                    <option value="DINING">Dining</option>
+                    <option value="ENTERTAINMENT">Entertainment</option>
+                    <option value="TRANSPORTATION">Transportation</option>
+                    <option value="HEALTHCARE">Healthcare</option>
+                    <option value="TRAVEL">Travel</option>
+                    <option value="SHOPPING">Shopping</option>
+                    <option value="PERSONAL_CARE">Personal Care</option>
+                    <option value="EDUCATION">Education</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+
+                <label>
+                  Date
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(event) => setEditDate(event.target.value)}
+                    required
+                  />
+                </label>
+
+                {editFormMessage && <p role="alert">{editFormMessage}</p>}
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="button-cancel"
+                    onClick={() => {
+                      setIsEditModalOpen(false);
+                      setEditingTransaction(null);
+                      setEditFormMessage("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className={
+                      editType === "EXPENSE"
+                        ? "button-expense"
+                        : "button-income"
+                    }
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </form>
             </section>
           </div>
