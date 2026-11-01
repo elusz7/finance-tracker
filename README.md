@@ -794,6 +794,8 @@ advice.
 Potential future improvements include:
 
 -   User registration, authentication, and per-user transaction data.
+-   Allow multiple accounts per user & account types
+-   Set financial goals
 -   Configurable currency and locale support.
 -   More detailed report filters and export options.
 -   CSV or spreadsheet export.
