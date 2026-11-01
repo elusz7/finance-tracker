@@ -1,0 +1,29 @@
+.monthly-report {
+  min-width: 0;
+}
+
+.monthly-report-header {
+  margin-bottom: 20px;
+}
+
+.monthly-report-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--main-txt);
+}
+
+.monthly-report-content {
+  width: 100%;
+  min-width: 0;
+  height: 350px;
+}
+
+@media (max-width: 600px) {
+  .monthly-report-header h2 {
+    font-size: 18px;
+  }
+
+  .monthly-report-content {
+    height: 300px;
+  }
+}

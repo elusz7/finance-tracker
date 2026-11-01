@@ -1,0 +1,45 @@
+
+.summary-report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.summary-report-card {
+  background: var(--page-bg);
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.summary-report-card p {
+  color: var(--secondary-txt);
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.summary-report-card h3 {
+  margin: 0;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+
+.summary-report-card .income {
+  color: var(--income-color);
+}
+
+.summary-report-card .expense {
+  color: var(--expense-color);
+}
+
+@media (max-width: 900px) {
+  .summary-report-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .summary-report-grid {
+    grid-template-columns: 1fr;
+  }
+}

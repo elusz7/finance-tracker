@@ -34,7 +34,10 @@ function TransactionList({ transactions, onEdit, onDelete }) {
           <div className="transaction-info">
             <h3>{transaction.description || "Untitled transaction"}</h3>
             <p>
-              {transaction.category} · {transaction.date}
+              {transaction.type === "INCOME"
+                ? transaction.incomeSource
+                : transaction.expenseCategory}{" "}
+              · {transaction.date}
             </p>
           </div>
 

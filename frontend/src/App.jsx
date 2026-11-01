@@ -6,6 +6,7 @@ import TransactionModal from "./components/TransactionModal";
 import TransactionFilters from "./components/TransactionFilters";
 import SuccessToast from "./components/SuccessToast";
 import MonthlyChart from "./components/MonthlyChart";
+import Reports from "./components/Reports/Reports";
 
 import { useEffect, useState } from "react";
 
@@ -375,6 +376,8 @@ function App() {
             />
           </section>
         )}
+
+        {activePage === "REPORTS" && <Reports />}
 
         {isAddModalOpen && (
           <TransactionModal
