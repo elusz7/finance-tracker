@@ -2,42 +2,103 @@
 .transaction-filters {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   margin-bottom: 20px;
-  padding: 16px;
+  padding: 20px;
   background: var(--page-bg);
   border: 1px solid #37445a;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
+/* Filter rows */
 .filter-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
   align-items: end;
 }
 
+/* Labels */
 .filter-row label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   color: var(--secondary-txt);
   font-size: 13px;
+  font-weight: 500;
 }
 
+/* Inputs and dropdowns */
 .filter-row input,
 .filter-row select {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-}
-
-.filter-row button {
-  align-self: end;
   min-height: 42px;
+  padding: 9px 12px;
+  color: var(--main-txt);
+  background: var(--card-bg);
+  border: 1px solid #37445a;
+  border-radius: 7px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
-/* Filter layout on wider screens */
+.filter-row input:focus,
+.filter-row select:focus {
+  border-color: var(--income-color);
+}
+
+/* Buttons */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  white-space: nowrap;
+}
+
+.filter-actions button {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* Reset button */
+.filter-actions .button-cancel {
+  color: var(--secondary-txt);
+  background: transparent;
+  border: 1px solid #475569;
+}
+
+.filter-actions .button-cancel:hover {
+  color: var(--main-txt);
+  background: #273449;
+}
+
+/* Apply button */
+.filter-actions .button-apply {
+  color: #ffffff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.filter-actions .button-apply:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.filter-actions button:active {
+  transform: scale(0.98);
+}
+
+/* Wider screens */
 @media (min-width: 900px) {
   .filter-row:first-child {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -45,5 +106,26 @@
 
   .filter-row:last-child {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Tablets and smaller screens */
+@media (max-width: 600px) {
+  .transaction-filters {
+    padding: 14px;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filter-actions {
+    display: flex;
+    width: 100%;
+  }
+
+  .filter-actions button {
+    width: auto;
   }
 }

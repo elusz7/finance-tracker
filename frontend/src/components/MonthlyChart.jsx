@@ -10,50 +10,44 @@ import {
 } from "recharts";
 
 import "./MonthlyChart.css";
+import { useState, useEffect } from "react";
 
-function MonthlyChart({ transactions }) {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+function MonthlyChart({ refresh }) {
+  const [monthlyChart, setMonthlyChart] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const currentYear = new Date().getFullYear();
 
-  const monthlyData = monthNames
-    .slice(0, currentMonth + 1)
-    .map((month, index) => {
-      const monthTransactions = transactions.filter((transaction) => {
-        const date = new Date(`${transaction.date}T00:00:00`);
+  const formatMonth = (yearMonth) => {
+    const [year, month] = yearMonth.split("-").map(Number);
 
-        return date.getFullYear() === currentYear && date.getMonth() === index;
-      });
-
-      const income = monthTransactions
-        .filter((transaction) => transaction.type === "INCOME")
-        .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-      const expenses = monthTransactions
-        .filter((transaction) => transaction.type === "EXPENSE")
-        .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-      return {
-        month,
-        Income: income,
-        Expenses: expenses,
-      };
+    return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+      month: "short",
     });
+  };
+
+  const today = new Date();
+
+  const getYearStart = () => {
+    const year = today.getFullYear();
+
+    return `${year}-01-01`;
+  };
+
+  const getTodayDate = () => {
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const monthlyData = (monthlyChart || []).map((item) => ({
+    month: formatMonth(item.yearMonth),
+    Income: Number(item.totalIncome),
+    Expenses: Number(item.totalExpenses),
+  }));
 
   const formatAxisAmount = (amount) => {
     const value = Number(amount);
@@ -81,6 +75,52 @@ function MonthlyChart({ transactions }) {
       maximumFractionDigits: 2,
     })}`;
 
+  useEffect(() => {
+    const loadMonthlyChart = async () => {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const query = new URLSearchParams({
+        startDate: getYearStart(),
+        endDate: getTodayDate(),
+      });
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/transactions/reports/monthly?${query}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load monthly chart data.");
+        }
+
+        const data = await response.json();
+        setMonthlyChart(data);
+      } catch (error) {
+        setErrorMessage(`Error loading monthly chart: ${error.message}`);
+        setMonthlyChart(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMonthlyChart();
+  }, [refresh]);
+
+  if (isLoading) {
+    return <section className="monthly-chart">Loading chart...</section>;
+  }
+
+  if (errorMessage) {
+    return <section className="monthly-chart">{errorMessage}</section>;
+  }
+
+  if (!monthlyChart) {
+    return (
+      <section className="monthly-chart">No monthly data available.</section>
+    );
+  }
+
   return (
     <section className="monthly-chart">
       <div className="monthly-chart-header">
@@ -89,65 +129,69 @@ function MonthlyChart({ transactions }) {
       </div>
 
       <div className="monthly-chart-content">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart
-            data={monthlyData}
-            margin={{ top: 10, right: 12, left: 12, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#334155"
-              vertical={false}
-            />
+        {monthlyData.length === 0 ? (
+          <p>No monthly data available.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart
+              data={monthlyData}
+              margin={{ top: 10, right: 12, left: 12, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#334155"
+                vertical={false}
+              />
 
-            <XAxis
-              dataKey="month"
-              stroke="#94a3b8"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12 }}
-              tickMargin={10}
-              interval={0}
-            />
+              <XAxis
+                dataKey="month"
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12 }}
+                tickMargin={10}
+                interval={0}
+              />
 
-            <YAxis
-              stroke="#94a3b8"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={formatAxisAmount}
-              width={80}
-              tick={{ fontSize: 12 }}
-              allowDecimals={false}
-            />
+              <YAxis
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={formatAxisAmount}
+                width={80}
+                tick={{ fontSize: 12 }}
+                allowDecimals={false}
+              />
 
-            <Tooltip
-              formatter={(value, name) => [formatTooltipAmount(value), name]}
-              contentStyle={{
-                backgroundColor: "#1b263b",
-                border: "1px solid #475569",
-                borderRadius: "8px",
-                color: "#f1f5f9",
-                padding: "10px 14px",
-              }}
-              labelStyle={{
-                color: "#f1f5f9",
-                fontWeight: "bold",
-                marginBottom: "6px",
-              }}
-              itemStyle={{
-                paddingTop: "2px",
-                paddingBottom: "2px",
-              }}
-              cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
-            />
+              <Tooltip
+                formatter={(value, name) => [formatTooltipAmount(value), name]}
+                contentStyle={{
+                  backgroundColor: "#1b263b",
+                  border: "1px solid #475569",
+                  borderRadius: "8px",
+                  color: "#f1f5f9",
+                  padding: "10px 14px",
+                }}
+                labelStyle={{
+                  color: "#f1f5f9",
+                  fontWeight: "bold",
+                  marginBottom: "6px",
+                }}
+                itemStyle={{
+                  paddingTop: "2px",
+                  paddingBottom: "2px",
+                }}
+                cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
+              />
 
-            <Legend />
+              <Legend />
 
-            <Bar dataKey="Income" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Income" fill="#38bdf8" radius={[4, 4, 0, 0]} />
 
-            <Bar dataKey="Expenses" fill="#fb923c" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+              <Bar dataKey="Expenses" fill="#fb923c" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </section>
   );

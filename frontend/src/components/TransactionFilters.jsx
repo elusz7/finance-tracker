@@ -52,16 +52,10 @@ function TransactionFilters({
   setMinAmount,
   maxAmount,
   setMaxAmount,
-}) {
-  const resetFilters = () => {
-    setFilterType("ALL");
-    setFilterCategory("ALL");
-    setStartDate("");
-    setEndDate("");
-    setMinAmount("");
-    setMaxAmount("");
-  };
 
+  onResetFilters,
+  onApplyFilters,
+}) {
   const classificationOptions =
     filterType === "INCOME"
       ? incomeSources
@@ -162,9 +156,23 @@ function TransactionFilters({
           />
         </label>
 
-        <button type="button" className="button-cancel" onClick={resetFilters}>
-          Reset Filters
-        </button>
+        <div className="filter-actions">
+          <button
+            type="button"
+            className="button-cancel"
+            onClick={onResetFilters}
+          >
+            Reset Filters
+          </button>
+
+          <button
+            type="button"
+            className="button-apply"
+            onClick={onApplyFilters}
+          >
+            Apply Filters
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 package com.example.financetracker.controller;
 
 import com.example.financetracker.dto.CategoryResponse;
+import com.example.financetracker.dto.DashboardResponse;
 import com.example.financetracker.dto.MonthlyResponse;
 import com.example.financetracker.dto.SummaryResponse;
 import com.example.financetracker.service.ReportService;
@@ -32,5 +33,10 @@ public class ReportController {
     @GetMapping("/category")
     public List<CategoryResponse> getCategoryReport(@RequestParam("startDate") LocalDate start, @RequestParam("endDate") LocalDate end) {
         return reportService.getCategoryReport(start, end);
+    }
+
+    @GetMapping("/dashboard")
+    public DashboardResponse getDashboardReport() {
+        return reportService.getDashboardReport();
     }
 }

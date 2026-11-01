@@ -16,6 +16,7 @@ function App() {
 
   // State to manage the active page (DASHBOARD, TRANSACTIONS, REPORTS)
   const [activePage, setActivePage] = useState("DASHBOARD");
+  const [dashboardRefresh, setDashboardRefresh] = useState(0);
 
   // State to manage the visibility of the add transaction modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -25,12 +26,27 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState(null);
 
   // state for transaction filtering
-  const [filterType, setFilterType] = useState("ALL");
-  const [filterCategory, setFilterCategory] = useState("ALL");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [minAmount, setMinAmount] = useState("");
-  const [maxAmount, setMaxAmount] = useState("");
+  const initialFilters = {
+    filterType: "ALL",
+    filterCategory: "ALL",
+    startDate: "",
+    endDate: "",
+    minAmount: "",
+    maxAmount: "",
+  };
+
+  const [draftFilters, setDraftFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+
+  //handle transactionfiltering
+  const handleApplyFilters = () => {
+    setAppliedFilters({ ...draftFilters });
+  };
+
+  const handleResetFilters = () => {
+    setDraftFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+  };
 
   // new transaction form state
   const [description, setDescription] = useState("");
@@ -54,34 +70,6 @@ function App() {
   // transaction success message state
   const [successMessage, setSuccessMessage] = useState("");
   const [successType, setSuccessType] = useState("EXPENSE");
-
-  //YTD calculations
-
-  const now = new Date();
-
-  const currentYear = now.getFullYear();
-
-  const today = [
-    currentYear,
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
-
-  const yearStart = `${currentYear}-01-01`;
-
-  const ytdTransactions = transactions.filter((transaction) => {
-    return transaction.date >= yearStart && transaction.date <= today;
-  });
-
-  const ytdIncome = ytdTransactions
-    .filter((transaction) => transaction.type === "INCOME")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const ytdExpenses = ytdTransactions
-    .filter((transaction) => transaction.type === "EXPENSE")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const ytdBalance = ytdIncome - ytdExpenses;
 
   // Handle deleting a transaction
   const handleDelete = async (transaction) => {
@@ -107,6 +95,7 @@ function App() {
         currentTransactions.filter((item) => item.id !== transaction.id),
       );
 
+      setDashboardRefresh((previous) => previous + 1);
       setSuccessType(transaction.type);
       setSuccessMessage("Transaction deleted successfully!");
     } catch (error) {
@@ -178,6 +167,7 @@ function App() {
         ),
       );
 
+      setDashboardRefresh((previous) => previous + 1);
       setSuccessType(savedTransaction.type);
       setSuccessMessage("Transaction updated successfully!");
       setIsEditModalOpen(false);
@@ -236,6 +226,7 @@ function App() {
         `${savedTransaction.type === "INCOME" ? "Income" : "Expense"} added successfully!`,
       );
       setIsAddModalOpen(false);
+      setDashboardRefresh((previous) => previous + 1);
     } catch (error) {
       setFormMessage(error.message);
     }
@@ -267,31 +258,43 @@ function App() {
   // Filter transactions based on the selected filters
   const allFilteredTransactions = transactions
     .filter((transaction) => {
-      if (filterType !== "ALL" && transaction.type !== filterType) {
-        return false;
-      }
-
       if (
-        filterCategory !== "ALL" &&
-        transaction.expenseCategory !== filterCategory &&
-        transaction.incomeSource !== filterCategory
+        appliedFilters.filterType !== "ALL" &&
+        transaction.type !== appliedFilters.filterType
       ) {
         return false;
       }
 
-      if (startDate && transaction.date < startDate) {
+      if (
+        appliedFilters.filterCategory !== "ALL" &&
+        transaction.expenseCategory !== appliedFilters.filterCategory &&
+        transaction.incomeSource !== appliedFilters.filterCategory
+      ) {
         return false;
       }
 
-      if (endDate && transaction.date > endDate) {
+      if (
+        appliedFilters.startDate &&
+        transaction.date < appliedFilters.startDate
+      ) {
         return false;
       }
 
-      if (minAmount !== "" && Number(transaction.amount) < Number(minAmount)) {
+      if (appliedFilters.endDate && transaction.date > appliedFilters.endDate) {
         return false;
       }
 
-      if (maxAmount !== "" && Number(transaction.amount) > Number(maxAmount)) {
+      if (
+        appliedFilters.minAmount !== "" &&
+        Number(transaction.amount) < Number(appliedFilters.minAmount)
+      ) {
+        return false;
+      }
+
+      if (
+        appliedFilters.maxAmount !== "" &&
+        Number(transaction.amount) > Number(appliedFilters.maxAmount)
+      ) {
         return false;
       }
 
@@ -332,13 +335,9 @@ function App() {
             </header>
 
             <div>
-              <SummaryCards
-                ytdBalance={ytdBalance}
-                ytdIncome={ytdIncome}
-                ytdExpenses={ytdExpenses}
-              />
+              <SummaryCards refresh={dashboardRefresh} />
 
-              <MonthlyChart transactions={transactions} />
+              <MonthlyChart refresh={dashboardRefresh} />
             </div>
           </div>
         )}
@@ -351,20 +350,52 @@ function App() {
             </header>
 
             <TransactionFilters
-              filterType={filterType}
-              setFilterType={setFilterType}
-              filterCategory={filterCategory}
-              setFilterCategory={setFilterCategory}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-              minAmount={minAmount}
-              setMinAmount={setMinAmount}
-              maxAmount={maxAmount}
-              setMaxAmount={setMaxAmount}
+              startDate={draftFilters.startDate}
+              setStartDate={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  startDate: value,
+                }))
+              }
+              endDate={draftFilters.endDate}
+              setEndDate={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  endDate: value,
+                }))
+              }
+              minAmount={draftFilters.minAmount}
+              setMinAmount={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  minAmount: value,
+                }))
+              }
+              maxAmount={draftFilters.maxAmount}
+              setMaxAmount={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  maxAmount: value,
+                }))
+              }
+              filterType={draftFilters.filterType}
+              setFilterType={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  filterType: value,
+                  filterCategory: "ALL",
+                }))
+              }
+              filterCategory={draftFilters.filterCategory}
+              setFilterCategory={(value) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  filterCategory: value,
+                }))
+              }
+              onApplyFilters={handleApplyFilters}
+              onResetFilters={handleResetFilters}
             />
-
             <section className="transactions">
               <h2>All Transactions ({allFilteredTransactions.length})</h2>
             </section>

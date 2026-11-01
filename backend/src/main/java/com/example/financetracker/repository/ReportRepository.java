@@ -1,6 +1,7 @@
 package com.example.financetracker.repository;
 
 import com.example.financetracker.dto.CategoryResponse;
+import com.example.financetracker.dto.DashboardResponse;
 import com.example.financetracker.dto.MonthlyResponse;
 import com.example.financetracker.dto.SummaryResponse;
 import com.example.financetracker.entity.ExpenseCategoryType;
@@ -25,6 +26,7 @@ public class ReportRepository {
     private final String summaryReportQuery;
     private final String monthlyReportQuery;
     private final String categoryReportQuery;
+    private final String dashboardReportQuery;
 
     public ReportRepository(NamedParameterJdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -33,6 +35,7 @@ public class ReportRepository {
             this.summaryReportQuery = getQuery("queries/summary-report.sql");
             this.monthlyReportQuery = getQuery("queries/monthly-report.sql");
             this.categoryReportQuery = getQuery("queries/category-report.sql");
+            this.dashboardReportQuery = getQuery("queries/dashboard-report.sql");
         }
         catch (IOException e){
             throw new QueryLoadingException(e.getMessage(), e);
@@ -75,6 +78,18 @@ public class ReportRepository {
                     CategoryResponse response = new CategoryResponse();
                     response.setExpenseAmount(rs.getBigDecimal("expense"));
                     response.setExpenseCategory(ExpenseCategoryType.valueOf(rs.getString("category")));
+                    return response;
+                });
+    }
+
+    public DashboardResponse getDashboardReport() {
+        return jdbcTemplate.queryForObject(dashboardReportQuery,
+                new MapSqlParameterSource(),
+                (rs, rowNum) -> {
+                    DashboardResponse response = new DashboardResponse();
+                    response.setYtdIncome(rs.getBigDecimal("ytdIncome"));
+                    response.setYtdExpenses(rs.getBigDecimal("ytdExpenses"));
+                    response.setYtdBalance(rs.getBigDecimal("ytdBalance"));
                     return response;
                 });
     }

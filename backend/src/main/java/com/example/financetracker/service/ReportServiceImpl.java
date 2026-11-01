@@ -1,6 +1,7 @@
 package com.example.financetracker.service;
 
 import com.example.financetracker.dto.CategoryResponse;
+import com.example.financetracker.dto.DashboardResponse;
 import com.example.financetracker.dto.MonthlyResponse;
 import com.example.financetracker.dto.SummaryResponse;
 import com.example.financetracker.exception.InvalidDateRangeException;
@@ -79,6 +80,11 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return responseList;
+    }
+
+    @Override
+    public DashboardResponse getDashboardReport() {
+        return reportRepository.getDashboardReport();
     }
 
     private void validateDate(LocalDate start, LocalDate end){

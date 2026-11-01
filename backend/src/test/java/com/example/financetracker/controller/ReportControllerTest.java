@@ -1,6 +1,7 @@
 package com.example.financetracker.controller;
 
 import com.example.financetracker.dto.CategoryResponse;
+import com.example.financetracker.dto.DashboardResponse;
 import com.example.financetracker.dto.MonthlyResponse;
 import com.example.financetracker.dto.SummaryResponse;
 import com.example.financetracker.entity.ExpenseCategoryType;
@@ -316,4 +317,46 @@ class ReportControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    void getDashboardSuccess() throws Exception {
+        DashboardResponse dashboardResponse = new DashboardResponse();
+        dashboardResponse.setYtdIncome(new BigDecimal("500.00"));
+        dashboardResponse.setYtdExpenses(new BigDecimal("250.00"));
+        dashboardResponse.setYtdBalance(new BigDecimal("250.00"));
+
+        when(testService.getDashboardReport())
+                .thenReturn(dashboardResponse);
+
+        mockMvc.perform(get("/api/transactions/reports/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ytdIncome")
+                        .value(dashboardResponse.getYtdIncome().doubleValue()))
+                .andExpect(jsonPath("$.ytdExpenses")
+                        .value(dashboardResponse.getYtdExpenses().doubleValue()))
+                .andExpect(jsonPath("$.ytdBalance")
+                        .value(dashboardResponse.getYtdBalance().doubleValue()));
+    }
+
+    @Test
+    void getDashboardSuccessNoTransactionsFound() throws Exception {
+        DashboardResponse dashboardResponse = new DashboardResponse();
+        dashboardResponse.setYtdIncome(BigDecimal.ZERO);
+        dashboardResponse.setYtdExpenses(BigDecimal.ZERO);
+        dashboardResponse.setYtdBalance(BigDecimal.ZERO);
+
+        when(testService.getDashboardReport())
+                .thenReturn(dashboardResponse);
+
+        mockMvc.perform(get("/api/transactions/reports/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ytdIncome")
+                        .value(dashboardResponse.getYtdIncome().doubleValue()))
+                .andExpect(jsonPath("$.ytdExpenses")
+                        .value(dashboardResponse.getYtdExpenses().doubleValue()))
+                .andExpect(jsonPath("$.ytdBalance")
+                        .value(dashboardResponse.getYtdBalance().doubleValue()));
+    }
+
+    //void getDashboardFailure -- shouldn't occur bc either values will be calculated or will get 0's?
 }
