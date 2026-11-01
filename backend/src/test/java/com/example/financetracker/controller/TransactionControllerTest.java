@@ -199,7 +199,6 @@ class TransactionControllerTest {
         verifyNoInteractions(testService);
     }
 
-
     @Test
     void addExpenseFailureMissingCategory() throws Exception {
         testExpenseRequest.setExpenseCategory(null);
@@ -224,7 +223,6 @@ class TransactionControllerTest {
         verifyNoInteractions(testService);
     }
 
-
     @Test
     void addIncomeFailureWithExpenseCategory() throws Exception {
         testIncomeRequest.setExpenseCategory(ExpenseCategoryType.GROCERY);
@@ -248,7 +246,6 @@ class TransactionControllerTest {
 
         verifyNoInteractions(testService);
     }
-
 
     @Test
     void getExpenseSuccess() throws Exception {
