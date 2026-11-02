@@ -7,6 +7,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.financetracker.entity.ExpenseCategoryType;
+import com.example.financetracker.entity.IncomeSourceType;
+import com.example.financetracker.entity.TransactionType;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import java.util.List;
 
 @RestController
@@ -31,8 +38,24 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<Transaction> getAllTransactions(){
-        return transactionService.fetchTransactionList();
+    public List<Transaction> getAllTransactions(
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) ExpenseCategoryType expenseCategory,
+            @RequestParam(required = false) IncomeSourceType incomeSource,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount
+    ) {
+        return transactionService.fetchFilteredTransactions(
+                type,
+                expenseCategory,
+                incomeSource,
+                startDate,
+                endDate,
+                minAmount,
+                maxAmount
+        );
     }
 
     @PutMapping("/{id}")

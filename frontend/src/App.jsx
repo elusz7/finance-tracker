@@ -25,6 +25,9 @@ function App() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
+  //state for handling refresh errors
+  const [refreshError, setRefreshError] = useState("");
+
   // state for transaction filtering
   const initialFilters = {
     filterType: "ALL",
@@ -40,14 +43,17 @@ function App() {
 
   //handle transactionfiltering
   const handleApplyFilters = () => {
+    setRefreshError("");
     setAppliedFilters({ ...draftFilters });
+    fetchTransactions(draftFilters);
   };
 
   const handleResetFilters = () => {
+    setRefreshError("");
     setDraftFilters(initialFilters);
     setAppliedFilters(initialFilters);
+    fetchTransactions(initialFilters);
   };
-
   // new transaction form state
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -91,9 +97,13 @@ function App() {
         throw new Error("Could not delete transaction.");
       }
 
-      setTransactions((currentTransactions) =>
-        currentTransactions.filter((item) => item.id !== transaction.id),
-      );
+      const refreshed = await refreshTransactions();
+
+      if (!refreshed) {
+        setRefreshError(
+          "Transaction deleted successfully, but the list could not be refreshed.",
+        );
+      }
 
       setDashboardRefresh((previous) => previous + 1);
       setSuccessType(transaction.type);
@@ -159,13 +169,13 @@ function App() {
 
       const savedTransaction = await response.json();
 
-      setTransactions((currentTransactions) =>
-        currentTransactions.map((transaction) =>
-          transaction.id === savedTransaction.id
-            ? savedTransaction
-            : transaction,
-        ),
-      );
+      const refreshed = await refreshTransactions();
+
+      if (!refreshed) {
+        setRefreshError(
+          "Transaction updated successfully, but the list could not be refreshed.",
+        );
+      }
 
       setDashboardRefresh((previous) => previous + 1);
       setSuccessType(savedTransaction.type);
@@ -178,7 +188,7 @@ function App() {
   };
 
   // Handle form submission for adding a new transaction
-  const handleSubmit = async (event) => {
+  const handleSaveTransaction = async (event) => {
     event.preventDefault();
     setFormMessage("");
 
@@ -209,10 +219,13 @@ function App() {
 
       const savedTransaction = await response.json();
 
-      setTransactions((currentTransactions) => [
-        ...currentTransactions,
-        savedTransaction,
-      ]);
+      const refreshed = await refreshTransactions();
+
+      if (!refreshed) {
+        setRefreshError(
+          "Transaction created successfully, but the list could not be refreshed.",
+        );
+      }
 
       setDescription("");
       setAmount("");
@@ -256,67 +269,89 @@ function App() {
   }, [successMessage]);
 
   // Filter transactions based on the selected filters
-  const allFilteredTransactions = transactions
-    .filter((transaction) => {
-      if (
-        appliedFilters.filterType !== "ALL" &&
-        transaction.type !== appliedFilters.filterType
-      ) {
-        return false;
+  const allFilteredTransactions = transactions;
+
+  const fetchTransactions = async (filters = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+
+      if (filters.filterType && filters.filterType !== "ALL") {
+        queryParams.append("type", filters.filterType);
       }
 
-      if (
-        appliedFilters.filterCategory !== "ALL" &&
-        transaction.expenseCategory !== appliedFilters.filterCategory &&
-        transaction.incomeSource !== appliedFilters.filterCategory
-      ) {
-        return false;
+      if (filters.filterCategory && filters.filterCategory !== "ALL") {
+        const expenseCategories = [
+          "HOUSING",
+          "UTILITIES",
+          "PHONE_INTERNET",
+          "SUBSCRIPTION",
+          "GROCERY",
+          "DINING",
+          "ENTERTAINMENT",
+          "TRANSPORTATION",
+          "GAS_FUEL",
+          "AUTO_MAINTENANCE",
+          "HEALTHCARE",
+          "INSURANCE",
+          "TRAVEL",
+          "SHOPPING",
+          "PERSONAL_CARE",
+          "EDUCATION",
+          "PETS",
+          "GIFTS_DONATIONS",
+          "TAXES",
+          "DEBT_PAYMENT",
+          "CHILDCARE",
+          "FITNESS",
+          "HOME_MAINTENANCE",
+          "FEES",
+          "WORK_EXPENSES",
+          "OTHER",
+        ];
+
+        const isExpenseCategory = expenseCategories.includes(
+          filters.filterCategory,
+        );
+
+        queryParams.append(
+          isExpenseCategory ? "expenseCategory" : "incomeSource",
+          filters.filterCategory,
+        );
       }
 
-      if (
-        appliedFilters.startDate &&
-        transaction.date < appliedFilters.startDate
-      ) {
-        return false;
+      if (filters.startDate) queryParams.append("startDate", filters.startDate);
+      if (filters.endDate) queryParams.append("endDate", filters.endDate);
+      if (filters.minAmount !== "")
+        queryParams.append("minAmount", filters.minAmount);
+      if (filters.maxAmount !== "")
+        queryParams.append("maxAmount", filters.maxAmount);
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `http://localhost:8080/api/transactions?${queryString}`
+        : "http://localhost:8080/api/transactions";
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
       }
 
-      if (appliedFilters.endDate && transaction.date > appliedFilters.endDate) {
-        return false;
-      }
-
-      if (
-        appliedFilters.minAmount !== "" &&
-        Number(transaction.amount) < Number(appliedFilters.minAmount)
-      ) {
-        return false;
-      }
-
-      if (
-        appliedFilters.maxAmount !== "" &&
-        Number(transaction.amount) > Number(appliedFilters.maxAmount)
-      ) {
-        return false;
-      }
-
+      const data = await response.json();
+      setTransactions(data);
       return true;
-    })
-    .slice()
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      return false;
+    }
+  };
+
+  const refreshTransactions = async () => {
+    return await fetchTransactions(appliedFilters);
+  };
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/transactions")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch transactions");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setTransactions(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching transactions:", error);
-      });
+    fetchTransactions();
   }, []);
 
   return (
@@ -396,6 +431,9 @@ function App() {
               onApplyFilters={handleApplyFilters}
               onResetFilters={handleResetFilters}
             />
+
+            {refreshError && <p className="refresh-error">{refreshError}</p>}
+
             <section className="transactions">
               <h2>All Transactions ({allFilteredTransactions.length})</h2>
             </section>
@@ -426,7 +464,7 @@ function App() {
             onExpenseCategoryChange={setExpenseCategory}
             onIncomeSourceChange={setIncomeSource}
             onDateChange={setDate}
-            onSubmit={handleSubmit}
+            onSubmit={handleSaveTransaction}
             onClose={closeAddModal}
             submitLabel={`Add ${type === "EXPENSE" ? "Expense" : "Income"}`}
           />

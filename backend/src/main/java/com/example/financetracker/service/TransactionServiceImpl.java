@@ -2,6 +2,8 @@
 package com.example.financetracker.service;
 
 import com.example.financetracker.dto.TransactionRequest;
+import com.example.financetracker.entity.ExpenseCategoryType;
+import com.example.financetracker.entity.IncomeSourceType;
 import com.example.financetracker.entity.Transaction;
 import com.example.financetracker.entity.TransactionType;
 import com.example.financetracker.exception.TransactionNotFoundException;
@@ -9,6 +11,7 @@ import com.example.financetracker.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -46,6 +49,41 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> fetchTransactionList() {
         return transactionRepository.findAll();
+    }
+
+    @Override
+    public List<Transaction> fetchFilteredTransactions(
+            TransactionType type,
+            ExpenseCategoryType expenseCategory,
+            IncomeSourceType incomeSource,
+            LocalDate startDate,
+            LocalDate endDate,
+            BigDecimal minAmount,
+            BigDecimal maxAmount
+    ) {
+        if (startDate != null && endDate != null
+                && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException(
+                    "Start date cannot be after end date."
+            );
+        }
+
+        if (minAmount != null && maxAmount != null
+                && minAmount.compareTo(maxAmount) > 0) {
+            throw new IllegalArgumentException(
+                    "Minimum amount cannot exceed maximum amount."
+            );
+        }
+
+        return transactionRepository.findFilteredTransactions(
+                type,
+                expenseCategory,
+                incomeSource,
+                startDate,
+                endDate,
+                minAmount,
+                maxAmount
+        );
     }
 
     @Override
